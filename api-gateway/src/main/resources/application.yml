@@ -11,6 +11,20 @@ spring:
     import: optional:configserver:http://localhost:8888
   cloud:
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders:
+              - '*'
+            allowCredentials: true
+            maxAge: 3600
       routes:
         - id: USERS
           predicates:
@@ -18,4 +32,8 @@ spring:
           uri: lb://users
           filters:
             - GatewayAuthFilter
+        - id: NOTIFICATION
+          predicates:
+            - Path=/notification/**
+          uri: lb://notification
 

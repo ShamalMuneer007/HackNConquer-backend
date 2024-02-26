@@ -1,5 +1,6 @@
-package org.hackncrypt.userservice.model.dtos.auth.request;
+package org.hackncrypt.notificationservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,9 +10,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
-    private String username;
-    private String password;
+public class OtpDto {
+    @JsonProperty("email")
     private String email;
+    @JsonProperty("otp")
     private Integer otp;
 }

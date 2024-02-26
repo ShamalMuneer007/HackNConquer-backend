@@ -1,0 +1,33 @@
+server:
+  port: 8700
+  servlet:
+    context-path: /notification
+spring:
+  application:
+    name: notification
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  config:
+    import: optional:configserver:http://localhost:8888
+  mail:
+    host: smtp.gmail.com
+    password: rwaj zucv bbkq kxgk
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    username: shamal20017@gmail.com
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
