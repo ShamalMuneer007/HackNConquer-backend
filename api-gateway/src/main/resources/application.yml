@@ -32,6 +32,10 @@ spring:
           uri: lb://users
           filters:
             - GatewayAuthFilter
+        - id: PROBLEM
+          predicates:
+            - Path=/problem/**
+          uri: lb://problem
         - id: NOTIFICATION
           predicates:
             - Path=/notification/**

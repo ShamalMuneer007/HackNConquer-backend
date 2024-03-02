@@ -1,7 +1,7 @@
 server:
-  port: 8100
+  port: 8200
   servlet:
-    context-path: "/user"
+    context-path: /problem
 eureka:
   client:
     service-url:
@@ -9,6 +9,9 @@ eureka:
 spring:
   application:
     name: problem
-  
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/
+      database: hacknconquer_problem
   config:
     import: optional:configserver:http://localhost:8888
