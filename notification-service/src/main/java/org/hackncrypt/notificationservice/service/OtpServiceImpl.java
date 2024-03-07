@@ -46,14 +46,13 @@ public class OtpServiceImpl implements OtpService {
             throw new RuntimeException("Something went wrong!");
         }
     }
-
     @RabbitListener(queues = "message_queue", ackMode = "MANUAL")
     public void processOtp(String email, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
         try {
             log.info("Message Received : {}", email);
             SecureRandom secureRandom = new SecureRandom();
             int otpNum = secureRandom.nextInt(9999);
-            String otp =  Integer.toString(otpNum);
+            String otp = String.format("%04d", otpNum);
             redisTemplate.opsForValue().set(email,otp);
             emailService.sendOtpToMail(email,otp);
             log.info(redisTemplate.opsForValue().get(email));

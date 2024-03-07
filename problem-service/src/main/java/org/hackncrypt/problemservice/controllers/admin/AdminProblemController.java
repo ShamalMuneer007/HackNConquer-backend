@@ -1,119 +1,77 @@
 package org.hackncrypt.problemservice.controllers.admin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.problemservice.annotations.Authorized;
+import org.hackncrypt.problemservice.enums.SubmissionStatus;
+import org.hackncrypt.problemservice.exceptions.ClientSandboxCodeExecutionError;
+import org.hackncrypt.problemservice.exceptions.SandboxCompileError;
+import org.hackncrypt.problemservice.exceptions.SandboxError;
+import org.hackncrypt.problemservice.exceptions.SandboxStandardError;
 import org.hackncrypt.problemservice.model.dto.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.hackncrypt.problemservice.services.ProblemService;
+import org.hackncrypt.problemservice.services.TestCaseTimeOutException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.util.Base64;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/admin")
 @Slf4j
 @Authorized("ROLE_ADMIN")
 public class AdminProblemController {
-    @Autowired
-    private RestTemplate restTemplate;
 
-    @Value("${judge0.base_url}")
-    private String JUDGE_BASE_URI;
+    private final ProblemService problemService;
+
+    public AdminProblemController(ProblemService problemService) {
+        this.problemService = problemService;
+    }
+
     @PostMapping("/verify-problem")
-    public ResponseEntity<String> verifyProblem(@RequestBody ProblemVerificationDto problemVerificationDto,
+    public ResponseEntity<ProblemVerificationResponse> verifyProblem(@RequestBody ProblemVerificationDto problemVerificationDto,
                                                 BindingResult bindingResult){
         if (bindingResult.hasErrors()){
             FieldError error = bindingResult.getFieldError();
-            return ResponseEntity.badRequest().body(error.getDefaultMessage());
+            return ResponseEntity.badRequest().body(new ProblemVerificationResponse(error.getDefaultMessage(),null,null,null));
         }
-        try {
-            ExecutorService executor = Executors.newFixedThreadPool(10);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            CountDownLatch latch = new CountDownLatch(problemVerificationDto.getTestCases().size());
-            log.info("No of test cases : {}",problemVerificationDto.getTestCases().size());
-            for (TestCase test : problemVerificationDto.getTestCases()) {
-                log.info("Test case  : {}",test.getTestCaseInput());
-                log.info("Expected Output : {}",test.getExpectedOutput());
-                UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(JUDGE_BASE_URI + "/submissions")
-                        .queryParam("base64_encoded", "true");
-                String uriWithParams = builder.toUriString();
-                executor.submit(() -> {
-                    log.info("Executing thread !!!!");
-                    // Create judge request
-                    Judge0Request request = new Judge0Request();
-                    request.setSource_code(problemVerificationDto.getSourceCode());
-                    request.setLanguage_id(problemVerificationDto.getLanguageId());
-                    request.setStdin(Base64.getEncoder()
-                            .encodeToString(test.getTestCaseInput().getBytes()));
-                    log.info("Language ID : {}",request.getLanguage_id());
-                    log.info("request object : {}",request  );
-                    // Make judge request
-                    // Convert the object to JSON
-                    String jsonBody = convertObjectToJson(request);
-                    // Set up headers
+        ProblemVerificationResponse problemVerificationResponse;
+        try{
+          problemVerificationResponse =  problemService.verifyProblem(problemVerificationDto);
+        }
+        catch (TestCaseTimeOutException e){
+            log.warn("Timed out!!!");
+            return ResponseEntity.badRequest().build();
+        }
+        catch (SandboxCompileError e){
+            log.error("Compile ERROR {}",e.getMessage());
+            return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
+                    .message(e.getMessage())
+                    .status(SubmissionStatus.COMPILE_ERR.name())
+                    .build());
+        }
+        catch (SandboxStandardError e){
+            return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
+                    .message(e.getMessage())
+                    .status(SubmissionStatus.STD_ERR.name())
+                    .build());
+        }
+        catch (ClientSandboxCodeExecutionError e){
+            log.error("Cient ERROR : {}",e.getMessage());
+            return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
+                    .message("client error"+e.getMessage())
+                    .build());
+        }
+        catch (SandboxError e){
+            return ResponseEntity.internalServerError().body(ProblemVerificationResponse.builder()
+                    .message(e.getMessage())
+                    .build());
+        }
+        catch (Exception e){
+            log.error("Something went wrong while processing the request !!! : {}",e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok(problemVerificationResponse);
+    }
 
-                    HttpEntity<String> requestEntity = new HttpEntity<>(jsonBody, headers);
-                    JudgeSubmissionResponse submissionResponse;
-                    try {
-                        JudgeTokenResponse response = restTemplate.postForObject(uriWithParams, requestEntity, JudgeTokenResponse.class);
-                        log.info("Response token ====> {}", response.getToken());
-                        do {
-                            try {
-                                submissionResponse = restTemplate.getForObject(JUDGE_BASE_URI + "/submissions/" + response.getToken(), JudgeSubmissionResponse.class);
-                            }
-                            catch (Exception e){
-                                log.error("Something went wrong while sending the request to judge0 {}",e.getMessage());
-                                latch.countDown();
-                                return;
-                            }
-                            try {
-                                TimeUnit.SECONDS.sleep(2);
-                            } catch (InterruptedException e) {
-                                log.error("Thread interrupted while sleeping: {}", e.getMessage());
-                            }
-                        } while (submissionResponse.getStatus().getId() < 3);
-                    }
-                    catch (Exception e){
-                        log.error("Something went wrong while sending the request to judge0 {}",e.getMessage());
-                        latch.countDown();
-                        return;
-                    }
-                    log.info("Response stdOut ==== > {}", submissionResponse.getStdout());
-                    log.info("Response stdErr ==== > {}", submissionResponse.getStderr());
-                    log.info("Response compile output ==== > {}", submissionResponse.getCompile_output());
-                    latch.countDown();
-                });
-            }
-            latch.await();
-        }
-        catch(Exception e){
-            return ResponseEntity.internalServerError().body("Something went wrong in server side");
-        }
-        return ResponseEntity.ok("submission success!");
-    }
-    private String convertObjectToJson(Object object) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            // Handle the exception or log an error
-            log.error("Something went wrong while converting object to json");
-            return null;
-        }
-    }
+
 }

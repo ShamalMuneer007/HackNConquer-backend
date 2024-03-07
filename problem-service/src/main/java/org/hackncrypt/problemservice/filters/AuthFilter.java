@@ -2,6 +2,7 @@ package org.hackncrypt.problemservice.filters;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.InvalidClaimException;
+import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +31,7 @@ public class AuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        log.info("request URI : {}",request.getRequestURI());
+        log.info("request URI : {}", request.getRequestURI());
         if (request.getRequestURI().startsWith("/cart/actuator") ||
                 request.getRequestURI().startsWith("/cart/eureka") ||
                 request.getRequestURI().startsWith("/cart/swagger-ui")
@@ -38,43 +39,50 @@ public class AuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+
         String token;
         try {
-            /*Init is a static method of JwtUtil custom package
-             where jwtSecret is initialized in  Util class for validation process to work */
-           JwtUtil.init(jwtSecret);
+            JwtUtil.init(jwtSecret);
             token = JwtUtil.getJWTFromRequest(request);
             if (!JwtUtil.validateToken(token)) {
                 log.error("Invalid JWT token");
-                throw new AccessDeniedException("Invalid Token");
+                setUnauthorizedResponse(response, "Invalid Token");
+                return;
             }
             log.info("validated jwt token");
             if (Objects.isNull(token)) {
                 log.error("Unauthorized request");
-                throw new RuntimeException("Unauthorized request");
+                setUnauthorizedResponse(response, "Unauthorized request");
+                return;
             }
             log.info("extracting role from token ...");
             String role = JwtUtil.getRoleFromToken(token);
-            log.info("role from jwt token : {}",role);
-            //Role based authorization is done here
-//            if (request.getRequestURI().startsWith("/cart/api/v1/admin")) {
-//                log.info("Verifying role.... ");
-//                if (!JwtUtil.getRoleFromToken(token).equals("ROLE_ADMIN")) {
-//                    log.error("Unauthorized request for admin api");
-//                    throw new AccessDeniedException("Unauthorized request");
-//                }
-//            }
-        } catch (ExpiredJwtException e) {
-            log.error("Expired jwt");
-            throw new ServletException("Expired Jwt");
-        } catch (InvalidClaimException e) {
-            log.error("Tampered Jwt token");
-            throw new AccessDeniedException("Tampered Jwt token");
-        } catch (Exception e) {
-            log.error("Something went wrong while parsing the token {}",e.getMessage());
-            throw new AccessDeniedException("Something went wrong while parsing the jwt token");
+            log.info("role from jwt token : {}", role);
+            // Role-based authorization logic
         }
-        request.setAttribute("userId",JwtUtil.getUserIdFromToken(token));
+        catch (SignatureException e) {
+            log.error("JWT token has been tampered with");
+            setUnauthorizedResponse(response, "Tampered JWT token");
+            return;
+        }
+        catch (ExpiredJwtException e) {
+            log.error("Expired jwt");
+            setUnauthorizedResponse(response, "Expired JWT");
+            return;
+        } catch (Exception e) {
+            log.error("Something went wrong while parsing the token {}", e.getMessage());
+            setUnauthorizedResponse(response, "Error parsing JWT token");
+            return;
+        }
+
+        request.setAttribute("userId", JwtUtil.getUserIdFromToken(token));
         filterChain.doFilter(request, response);
+    }
+
+    private void setUnauthorizedResponse(HttpServletResponse response, String errorMessage) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\":\"" + errorMessage + "\"}");
+        response.getWriter().flush();
     }
 }

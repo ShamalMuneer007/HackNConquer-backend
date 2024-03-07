@@ -22,11 +22,10 @@ public class JwtUtil {
                 .getBody();
         return  claims.getSubject();
     }
-    public boolean validateToken(String token){
+    public void validateToken(String token){
         log.info("Token : {}",token);
         try {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
-            return true;
         }
         catch (ExpiredJwtException e){
             throw new ExpiredJwtException(e.getHeader(),e.getClaims(),"Jwt token is expired");
@@ -35,7 +34,7 @@ public class JwtUtil {
             throw new JwtException("Jwt token is invalid");
         }
         catch (Exception e){
-            throw new RuntimeException("Something is wrong with the jwt token validation");
+            throw e;
         }
 
     }

@@ -22,5 +22,5 @@ public class JudgeSubmissionResponse {
     @JsonProperty
     private String compile_output;
     @JsonProperty
-    private SubmissionStatus status;
+    private SubmissionStatus status = new SubmissionStatus();
 }

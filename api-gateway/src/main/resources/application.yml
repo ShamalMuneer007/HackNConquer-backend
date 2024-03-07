@@ -36,6 +36,8 @@ spring:
           predicates:
             - Path=/problem/**
           uri: lb://problem
+          filters:
+            - GatewayAuthFilter
         - id: NOTIFICATION
           predicates:
             - Path=/notification/**
