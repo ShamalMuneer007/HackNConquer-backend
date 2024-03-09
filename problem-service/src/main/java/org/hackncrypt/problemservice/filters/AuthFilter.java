@@ -58,7 +58,6 @@ public class AuthFilter extends OncePerRequestFilter {
             log.info("extracting role from token ...");
             String role = JwtUtil.getRoleFromToken(token);
             log.info("role from jwt token : {}", role);
-            // Role-based authorization logic
         }
         catch (SignatureException e) {
             log.error("JWT token has been tampered with");

@@ -32,7 +32,16 @@ public class AdminProblemController {
                                                 BindingResult bindingResult){
         if (bindingResult.hasErrors()){
             FieldError error = bindingResult.getFieldError();
-            return ResponseEntity.badRequest().body(new ProblemVerificationResponse(error.getDefaultMessage(),null,null,null));
+            return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
+                            .message(error.getDefaultMessage())
+                    .build());
+        }
+        if(problemVerificationDto.getTestCases().get(0).getTestCaseInput().isEmpty() ||
+                problemVerificationDto.getTestCases().get(0).getExpectedOutput().isEmpty()){
+            return ResponseEntity.badRequest().body(ProblemVerificationResponse
+                    .builder()
+                            .message("Invalid test cases !!!")
+                    .build());
         }
         ProblemVerificationResponse problemVerificationResponse;
         try{
@@ -50,6 +59,7 @@ public class AdminProblemController {
                     .build());
         }
         catch (SandboxStandardError e){
+            log.warn("Standard Error {}",e.getMessage());
             return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
                     .message(e.getMessage())
                     .status(SubmissionStatus.STD_ERR.name())
