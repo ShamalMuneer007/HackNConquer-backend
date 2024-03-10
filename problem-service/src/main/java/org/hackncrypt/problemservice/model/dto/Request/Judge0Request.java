@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.model.dto;
+package org.hackncrypt.problemservice.model.dto.Request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

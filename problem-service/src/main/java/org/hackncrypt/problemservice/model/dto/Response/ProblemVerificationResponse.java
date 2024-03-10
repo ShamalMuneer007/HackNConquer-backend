@@ -1,8 +1,9 @@
-package org.hackncrypt.problemservice.model.dto;
+package org.hackncrypt.problemservice.model.dto.Response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-import org.hackncrypt.problemservice.enums.SubmissionStatus;
+import org.hackncrypt.problemservice.model.dto.TestCases.AcceptedCase;
+import org.hackncrypt.problemservice.model.dto.TestCases.RejectedCase;
 
 import java.util.List;
 

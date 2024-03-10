@@ -4,7 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.problemservice.enums.SubmissionStatus;
 import org.hackncrypt.problemservice.exceptions.*;
-import org.hackncrypt.problemservice.model.dto.*;
+import org.hackncrypt.problemservice.model.dto.Request.Judge0Request;
+import org.hackncrypt.problemservice.model.dto.Request.ProblemVerificationRequest;
+import org.hackncrypt.problemservice.model.dto.Response.JudgeSubmissionResponse;
+import org.hackncrypt.problemservice.model.dto.Response.JudgeTokenResponse;
+import org.hackncrypt.problemservice.model.dto.Response.ProblemVerificationResponse;
+import org.hackncrypt.problemservice.model.dto.TestCases.AcceptedCase;
+import org.hackncrypt.problemservice.model.dto.TestCases.RejectedCase;
+import org.hackncrypt.problemservice.model.dto.TestCases.TestCase;
 import org.hackncrypt.problemservice.repositories.ProblemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -25,7 +32,7 @@ public class ProblemServiceImpl implements ProblemService {
     private final WebClient judgeWebClient;
 
     @Override
-    public ProblemVerificationResponse verifyProblem(ProblemVerificationDto problemVerificationDto) {
+    public ProblemVerificationResponse verifyProblem(ProblemVerificationRequest problemVerificationDto) {
         Queue<AcceptedCase> acceptedCases = new ConcurrentLinkedQueue<>();
         Queue<RejectedCase> rejectedCases = new ConcurrentLinkedQueue<>();
         Queue<RuntimeException> exception = new ConcurrentLinkedQueue<>();
@@ -93,10 +100,10 @@ public class ProblemServiceImpl implements ProblemService {
     }
 
     // Utilizing the submission token, an API call is executed to retrieve the details of the code execution performed in the submission.
-    private JudgeSubmissionResponse executeAndGetResponse(ProblemVerificationDto problemVerificationDto, TestCase test){
+    private JudgeSubmissionResponse executeAndGetResponse(ProblemVerificationRequest problemVerificationRequest, TestCase test){
         Judge0Request request = new Judge0Request();
-        request.setSource_code(problemVerificationDto.getSourceCode());
-        request.setLanguage_id(problemVerificationDto.getLanguageId());
+        request.setSource_code(problemVerificationRequest.getSourceCode());
+        request.setLanguage_id(problemVerificationRequest.getLanguageId());
         request.setStdin(Base64.getEncoder().encodeToString(test.getTestCaseInput().getBytes()));
 
         JudgeTokenResponse submissionCreationResponse = createJudge0Submission(request);

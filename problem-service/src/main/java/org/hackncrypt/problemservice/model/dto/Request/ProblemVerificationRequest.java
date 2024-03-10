@@ -1,7 +1,8 @@
-package org.hackncrypt.problemservice.model.dto;
+package org.hackncrypt.problemservice.model.dto.Request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hackncrypt.problemservice.model.dto.TestCases.TestCase;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Validated
-public class ProblemVerificationDto {
+public class ProblemVerificationRequest {
     @NotNull
     private List<TestCase> testCases;
     @NotNull

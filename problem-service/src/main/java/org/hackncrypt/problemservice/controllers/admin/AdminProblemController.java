@@ -7,9 +7,10 @@ import org.hackncrypt.problemservice.exceptions.ClientSandboxCodeExecutionError;
 import org.hackncrypt.problemservice.exceptions.SandboxCompileError;
 import org.hackncrypt.problemservice.exceptions.SandboxError;
 import org.hackncrypt.problemservice.exceptions.SandboxStandardError;
-import org.hackncrypt.problemservice.model.dto.*;
+import org.hackncrypt.problemservice.model.dto.Request.ProblemVerificationRequest;
+import org.hackncrypt.problemservice.model.dto.Response.ProblemVerificationResponse;
 import org.hackncrypt.problemservice.services.ProblemService;
-import org.hackncrypt.problemservice.services.TestCaseTimeOutException;
+import org.hackncrypt.problemservice.exceptions.TestCaseTimeOutException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -28,16 +29,16 @@ public class AdminProblemController {
     }
 
     @PostMapping("/verify-problem")
-    public ResponseEntity<ProblemVerificationResponse> verifyProblem(@RequestBody ProblemVerificationDto problemVerificationDto,
-                                                BindingResult bindingResult){
+    public ResponseEntity<ProblemVerificationResponse> verifyProblem(@RequestBody ProblemVerificationRequest problemVerificationRequest,
+                                                                     BindingResult bindingResult){
         if (bindingResult.hasErrors()){
             FieldError error = bindingResult.getFieldError();
             return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
                             .message(error.getDefaultMessage())
                     .build());
         }
-        if(problemVerificationDto.getTestCases().get(0).getTestCaseInput().isEmpty() ||
-                problemVerificationDto.getTestCases().get(0).getExpectedOutput().isEmpty()){
+        if(problemVerificationRequest.getTestCases().get(0).getTestCaseInput().isEmpty() ||
+                problemVerificationRequest.getTestCases().get(0).getExpectedOutput().isEmpty()){
             return ResponseEntity.badRequest().body(ProblemVerificationResponse
                     .builder()
                             .message("Invalid test cases !!!")
@@ -45,7 +46,7 @@ public class AdminProblemController {
         }
         ProblemVerificationResponse problemVerificationResponse;
         try{
-          problemVerificationResponse =  problemService.verifyProblem(problemVerificationDto);
+          problemVerificationResponse =  problemService.verifyProblem(problemVerificationRequest);
         }
         catch (TestCaseTimeOutException e){
             log.warn("Timed out!!!");

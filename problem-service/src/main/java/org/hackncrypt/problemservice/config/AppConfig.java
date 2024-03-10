@@ -20,10 +20,9 @@ public class AppConfig {
     }
     @Bean
     public WebClient judgeWebClient() {
-        WebClient webClient = WebClient.builder()
+        return WebClient.builder()
                 .baseUrl(judgeBaseURI)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
-        return webClient;
     }
 }

@@ -1,49 +1,53 @@
 package org.hackncrypt.userservice.service.user;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.userservice.config.rabbitMQ.MQConfig;
 import org.hackncrypt.userservice.enums.Role;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
+import org.hackncrypt.userservice.exceptions.JwtGenerationException;
+import org.hackncrypt.userservice.exceptions.UserAuthenticationException;
 import org.hackncrypt.userservice.model.dtos.UserAuthInfo;
 import org.hackncrypt.userservice.model.dtos.auth.OtpDto;
+import org.hackncrypt.userservice.model.dtos.auth.request.LoginRequest;
 import org.hackncrypt.userservice.model.dtos.auth.request.RegisterRequest;
-import org.hackncrypt.userservice.model.dtos.auth.response.RegisterResponse;
 import org.hackncrypt.userservice.model.entities.User;
 import org.hackncrypt.userservice.proxies.feign.NotificationFeignProxy;
 import org.hackncrypt.userservice.repositories.UserRepository;
+import org.hackncrypt.userservice.service.jwt.JwtService;
 import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.http.ResponseEntity;
+import org.hackncrypt.userservice.config.rabbitMQ.MQConfig;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.random.RandomGenerator;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final RabbitTemplate rabbitTemplate;
     private final NotificationFeignProxy notificationFeignProxy;
-
-    public UserServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository, RabbitTemplate rabbitTemplate, NotificationFeignProxy notificationFeignProxy) {
-        this.passwordEncoder = passwordEncoder;
-        this.userRepository = userRepository;
-        this.rabbitTemplate = rabbitTemplate;
-        this.notificationFeignProxy = notificationFeignProxy;
-    }
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
     @Override
     @Transactional
-    public void registerUser(RegisterRequest userRegisterDto) {
-        validateUserRegisterDto(userRegisterDto);
-        try {
+    public String registerUser(RegisterRequest userRegisterDto) {
+
+            validateUserRegisterDto(userRegisterDto);
             User user = User.builder()
                     .username(userRegisterDto.getUsername())
                     .email(userRegisterDto.getEmail())
@@ -55,11 +59,12 @@ public class UserServiceImpl implements UserService {
                     .xp(0)
                     .created_at(new Date())
                     .build();
-            userRepository.save(user);
-        }
-        catch (Exception e){
-            throw new RuntimeException("Something went wrong while saving the data to database");
-        }
+            user = userRepository.save(user);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            String token = jwtService.generateToken(authToken);
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            return token;
     }
 
     @Override
@@ -120,6 +125,24 @@ public class UserServiceImpl implements UserService {
     @Override
     public String getUsernameFromUserEmail(String email) {
         return userRepository.findByEmail(email).getUsername();
+    }
+
+    @Override
+    public String authenticateUser(LoginRequest LoginRequest) {
+        String username = LoginRequest.getUsername();
+        String password = LoginRequest.getPassword();
+        try {
+           Authentication authentication = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(username, password));
+           return jwtService.generateToken(authentication);
+        }
+        catch (AuthenticationException e){
+            log.error(e.getMessage());
+            throw new UserAuthenticationException(e.getMessage());
+        }
+        catch (Exception e){
+            throw e;
+        }
     }
 
     //Validate User Inputs

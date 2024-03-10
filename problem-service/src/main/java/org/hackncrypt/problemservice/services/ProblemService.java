@@ -1,8 +1,8 @@
 package org.hackncrypt.problemservice.services;
 
-import org.hackncrypt.problemservice.model.dto.ProblemVerificationDto;
-import org.hackncrypt.problemservice.model.dto.ProblemVerificationResponse;
+import org.hackncrypt.problemservice.model.dto.Request.ProblemVerificationRequest;
+import org.hackncrypt.problemservice.model.dto.Response.ProblemVerificationResponse;
 
 public interface ProblemService {
-    ProblemVerificationResponse verifyProblem(ProblemVerificationDto problemVerificationDto) throws Exception;
+    ProblemVerificationResponse verifyProblem(ProblemVerificationRequest problemVerificationRequest) throws Exception;
 }

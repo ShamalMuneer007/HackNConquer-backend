@@ -1,4 +1,4 @@
-package org.hackncrypt.notificationservice.config.rabbitMQ;
+package org.hackncrypt.notificationservice.config.broker.rabbitMQ;
 
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
