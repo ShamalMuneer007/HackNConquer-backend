@@ -1,19 +1,21 @@
 package org.hackncrypt.problemservice.controllers.admin;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.problemservice.annotations.Authorized;
 import org.hackncrypt.problemservice.enums.SubmissionStatus;
-import org.hackncrypt.problemservice.exceptions.ClientSandboxCodeExecutionError;
-import org.hackncrypt.problemservice.exceptions.SandboxCompileError;
-import org.hackncrypt.problemservice.exceptions.SandboxError;
-import org.hackncrypt.problemservice.exceptions.SandboxStandardError;
-import org.hackncrypt.problemservice.model.dto.Request.ProblemVerificationRequest;
-import org.hackncrypt.problemservice.model.dto.Response.ProblemVerificationResponse;
-import org.hackncrypt.problemservice.services.ProblemService;
-import org.hackncrypt.problemservice.exceptions.TestCaseTimeOutException;
+import org.hackncrypt.problemservice.exceptions.judge0.ClientSandboxCodeExecutionError;
+import org.hackncrypt.problemservice.exceptions.judge0.SandboxCompileError;
+import org.hackncrypt.problemservice.exceptions.judge0.SandboxError;
+import org.hackncrypt.problemservice.exceptions.judge0.SandboxStandardError;
+import org.hackncrypt.problemservice.model.dto.ApiSuccessResponse;
+import org.hackncrypt.problemservice.model.dto.request.PatchProblemRequest;
+import org.hackncrypt.problemservice.model.dto.request.AddProblemRequest;
+import org.hackncrypt.problemservice.model.dto.request.ProblemVerificationRequest;
+import org.hackncrypt.problemservice.model.dto.response.ProblemVerificationResponse;
+import org.hackncrypt.problemservice.services.problem.ProblemService;
+import org.hackncrypt.problemservice.exceptions.judge0.TestCaseTimeOutException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,19 +31,12 @@ public class AdminProblemController {
     }
 
     @PostMapping("/verify-problem")
-    public ResponseEntity<ProblemVerificationResponse> verifyProblem(@RequestBody ProblemVerificationRequest problemVerificationRequest,
-                                                                     BindingResult bindingResult){
-        if (bindingResult.hasErrors()){
-            FieldError error = bindingResult.getFieldError();
-            return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
-                            .message(error.getDefaultMessage())
-                    .build());
-        }
+    public ResponseEntity<ProblemVerificationResponse> verifyProblem(@Valid @RequestBody ProblemVerificationRequest problemVerificationRequest){
         if(problemVerificationRequest.getTestCases().get(0).getTestCaseInput().isEmpty() ||
                 problemVerificationRequest.getTestCases().get(0).getExpectedOutput().isEmpty()){
             return ResponseEntity.badRequest().body(ProblemVerificationResponse
                     .builder()
-                            .message("Invalid test cases !!!")
+                    .message("Invalid test cases !!!")
                     .build());
         }
         ProblemVerificationResponse problemVerificationResponse;
@@ -67,7 +62,7 @@ public class AdminProblemController {
                     .build());
         }
         catch (ClientSandboxCodeExecutionError e){
-            log.error("Cient ERROR : {}",e.getMessage());
+            log.error("Client ERROR : {}",e.getMessage());
             return ResponseEntity.badRequest().body(ProblemVerificationResponse.builder()
                     .message("client error"+e.getMessage())
                     .build());
@@ -82,6 +77,17 @@ public class AdminProblemController {
             return ResponseEntity.internalServerError().build();
         }
         return ResponseEntity.ok(problemVerificationResponse);
+    }
+
+    @PostMapping("/add-problem")
+    public ResponseEntity<ApiSuccessResponse> addProblem(@Valid @RequestBody AddProblemRequest addProblemRequest){
+        problemService.addProblem(addProblemRequest);
+        return ResponseEntity.ok(new ApiSuccessResponse("Problem added successfully"));
+    }
+    @PatchMapping("/edit-problem/{problemNo}")
+    public ResponseEntity<ApiSuccessResponse> patchProblem(@Valid @RequestBody PatchProblemRequest patchProblemRequest, @PathVariable long problemNo){
+        problemService.updateProblemDetails(problemNo,patchProblemRequest);
+        return ResponseEntity.ok(new ApiSuccessResponse("Problem updated successfully"));
     }
 
 

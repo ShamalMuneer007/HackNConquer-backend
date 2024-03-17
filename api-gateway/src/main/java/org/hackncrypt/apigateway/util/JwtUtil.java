@@ -23,7 +23,6 @@ public class JwtUtil {
         return  claims.getSubject();
     }
     public void validateToken(String token){
-        log.info("Token : {}",token);
         try {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
         }

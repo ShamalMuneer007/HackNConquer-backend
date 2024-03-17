@@ -18,24 +18,29 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        log.info("||||||||| Intercepting request ||||||||");
         if (handler instanceof HandlerMethod handlerMethod) {
-            log.info("Getting the bean type of where the request is headed to");
+
+            Class<?> handlerClass = handlerMethod.getBeanType();
+            log.info(handlerClass.getName());//Returns type of the handlerMethod
+
             //Checks if the class is annotated with @Authorized
-            Class<?> handlerClass = handlerMethod.getBeanType();//Returns type of the handlerMethod
-            log.info("Bean type : {}",handlerClass.getClasses().getClass().getName());
             if (handlerClass.isAnnotationPresent(Authorized.class)) {
+                log.info("Validating Authorization");
                 Authorized classRoleAuthorization = handlerClass.getAnnotation(Authorized.class);
+
                 // Get roles from the class-level annotation
                 String[] classAllowedRoles = classRoleAuthorization.value();
+                log.info(Arrays.asList(classAllowedRoles).toString());
                 String userRole = JwtUtil.getRoleFromToken(JwtUtil.getJWTFromRequest(request));
-                // Check if the user has the required role
+                log.info(userRole);
+
+                // Checks if the user has the required role
                 if (!Arrays.asList(classAllowedRoles).contains(userRole)) {
                     response.sendError(HttpServletResponse.SC_FORBIDDEN, "Insufficient privileges");
                     return false;
                 }
             }
-            // Check if the method is annotated with @Authorized
+            // Checks if the method is annotated with @Authorized
             if (handlerMethod.getMethod().isAnnotationPresent(Authorized.class)) {
                 Authorized roleAuthorization = handlerMethod.getMethodAnnotation(Authorized.class);
 

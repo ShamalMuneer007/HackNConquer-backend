@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProblemRepository extends MongoRepository<Problem,String> {
+    Problem findByProblemNo(long problemNo);
+
+    boolean existsByProblemNameIgnoreCase(String problemName);
 }
