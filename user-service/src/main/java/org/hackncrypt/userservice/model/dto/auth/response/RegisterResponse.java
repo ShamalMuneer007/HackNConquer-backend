@@ -1,4 +1,4 @@
-package org.hackncrypt.userservice.model.dtos.auth.response;
+package org.hackncrypt.userservice.model.dto.auth.response;
 
 import lombok.*;
 

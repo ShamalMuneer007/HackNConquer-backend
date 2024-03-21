@@ -1,4 +1,4 @@
-package org.hackncrypt.userservice.model.dtos.auth;
+package org.hackncrypt.userservice.model.dto.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

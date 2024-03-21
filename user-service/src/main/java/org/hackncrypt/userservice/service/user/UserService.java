@@ -1,10 +1,10 @@
 package org.hackncrypt.userservice.service.user;
 
-import org.hackncrypt.userservice.model.dtos.UserAuthInfo;
-import org.hackncrypt.userservice.model.dtos.auth.request.LoginRequest;
-import org.hackncrypt.userservice.model.dtos.auth.request.RegisterRequest;
-import org.hackncrypt.userservice.model.entities.User;
-import org.springframework.security.core.Authentication;
+import org.hackncrypt.userservice.model.dto.UserDto;
+import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
+import org.hackncrypt.userservice.model.dto.auth.request.LoginRequest;
+import org.hackncrypt.userservice.model.dto.auth.request.RegisterRequest;
+import org.springframework.data.domain.Page;
 
 public interface UserService {
     String registerUser(RegisterRequest userRegisterDto);
@@ -22,4 +22,6 @@ public interface UserService {
     String getUsernameFromUserEmail(String email);
 
     String authenticateUser(LoginRequest userLoginRequestDto);
+
+    Page<UserDto> getAllUsers(int page, int size);
 }

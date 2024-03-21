@@ -19,7 +19,7 @@ import java.time.LocalDate;
 
 @RestControllerAdvice
 @Slf4j
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class DomainExceptionControllerAdvice {
     @ExceptionHandler(NoSuchValueException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -21,6 +21,8 @@ public class SecurityConfiguration {
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize ->
                         authorize
+                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/api/v1/user/**").hasRole("USER")
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .anyRequest().authenticated());
         return httpSecurity.build();

@@ -1,4 +1,4 @@
-package org.hackncrypt.userservice.model.dtos.auth.request;
+package org.hackncrypt.userservice.model.dto.auth.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

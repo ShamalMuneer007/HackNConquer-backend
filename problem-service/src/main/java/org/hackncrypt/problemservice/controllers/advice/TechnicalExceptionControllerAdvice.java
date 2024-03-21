@@ -17,7 +17,7 @@ import java.time.LocalDate;
 
 @Slf4j
 @RestControllerAdvice
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class TechnicalExceptionControllerAdvice {
     @ExceptionHandler(DataAccessException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

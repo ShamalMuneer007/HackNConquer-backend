@@ -25,9 +25,10 @@ public class User {
     private String email;
     private int level;
     private int xp;
-    private boolean isBlocked;
     private boolean isPremium;
+    private boolean isBlocked;
     private Date created_at;
     @Enumerated(EnumType.STRING)
     private Role role;
+    private boolean isDeleted;
 }

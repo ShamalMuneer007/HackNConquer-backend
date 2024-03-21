@@ -6,6 +6,7 @@ import org.hackncrypt.problemservice.model.dto.testCases.TestCase;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.List;
 public class Problem {
     @Id
     private String problemId;
-    @Indexed(unique = true)
+    @Field("problemNo")
     private Long problemNo;
     private String description;
     private String problemName;

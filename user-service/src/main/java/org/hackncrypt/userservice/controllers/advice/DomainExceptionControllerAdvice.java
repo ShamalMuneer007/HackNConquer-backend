@@ -2,7 +2,7 @@ package org.hackncrypt.userservice.controllers.advice;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
-import org.hackncrypt.userservice.model.dtos.ApiError;
+import org.hackncrypt.userservice.model.dto.response.ApiError;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import org.springframework.web.context.request.WebRequest;
 import java.time.LocalDate;
 
 @RestControllerAdvice
-@Order(Ordered.LOWEST_PRECEDENCE)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
 public class DomainExceptionControllerAdvice {
     @ExceptionHandler(InvalidInputException.class)

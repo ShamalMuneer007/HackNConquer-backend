@@ -4,12 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.enums.Role;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
-import org.hackncrypt.userservice.exceptions.JwtGenerationException;
 import org.hackncrypt.userservice.exceptions.UserAuthenticationException;
-import org.hackncrypt.userservice.model.dtos.UserAuthInfo;
-import org.hackncrypt.userservice.model.dtos.auth.OtpDto;
-import org.hackncrypt.userservice.model.dtos.auth.request.LoginRequest;
-import org.hackncrypt.userservice.model.dtos.auth.request.RegisterRequest;
+import org.hackncrypt.userservice.model.dto.UserDto;
+import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
+import org.hackncrypt.userservice.model.dto.auth.OtpDto;
+import org.hackncrypt.userservice.model.dto.auth.request.LoginRequest;
+import org.hackncrypt.userservice.model.dto.auth.request.RegisterRequest;
 import org.hackncrypt.userservice.model.entities.User;
 import org.hackncrypt.userservice.proxies.feign.NotificationFeignProxy;
 import org.hackncrypt.userservice.repositories.UserRepository;
@@ -17,6 +17,9 @@ import org.hackncrypt.userservice.service.jwt.JwtService;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.hackncrypt.userservice.config.rabbitMQ.MQConfig;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -143,6 +146,13 @@ public class UserServiceImpl implements UserService {
         catch (Exception e){
             throw e;
         }
+    }
+
+    @Override
+    public Page<UserDto> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page-1, size);
+        Page<User> userPage = userRepository.findAllByIsDeletedIsFalse(pageable);
+        return userPage.map(UserDto::new);
     }
 
     //Validate User Inputs

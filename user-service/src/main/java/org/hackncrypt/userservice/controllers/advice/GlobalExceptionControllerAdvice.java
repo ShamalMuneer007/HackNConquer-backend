@@ -1,7 +1,7 @@
 package org.hackncrypt.userservice.controllers.advice;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.userservice.model.dtos.ApiError;
+import org.hackncrypt.userservice.model.dto.response.ApiError;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,7 @@ import org.springframework.web.context.request.WebRequest;
 import java.time.LocalDate;
 
 @RestControllerAdvice
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(Ordered.LOWEST_PRECEDENCE)
 @Slf4j
 public class GlobalExceptionControllerAdvice {
     @ExceptionHandler(Exception.class)

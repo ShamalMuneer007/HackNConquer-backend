@@ -11,6 +11,7 @@ import org.hackncrypt.problemservice.exceptions.judge0.ClientSandboxCodeExecutio
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxCompileError;
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxError;
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxStandardError;
+import org.hackncrypt.problemservice.model.dto.ProblemDto;
 import org.hackncrypt.problemservice.model.dto.request.PatchProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.AddProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.Judge0Request;
@@ -25,6 +26,12 @@ import org.hackncrypt.problemservice.model.entities.Category;
 import org.hackncrypt.problemservice.model.entities.Problem;
 import org.hackncrypt.problemservice.repositories.ProblemRepository;
 import org.hackncrypt.problemservice.services.category.CategoryService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -41,6 +48,8 @@ public class ProblemServiceImpl implements ProblemService {
     private final ProblemRepository problemRepository;
     private final WebClient judgeWebClient;
     private final CategoryService categoryService;
+    private final MongoOperations mongoOperations;
+
 
     @Override
     public ProblemVerificationResponse verifyProblem(ProblemVerificationRequest problemVerificationDto) {
@@ -106,6 +115,7 @@ public class ProblemServiceImpl implements ProblemService {
                     .isDeleted(false)
                     .difficulty(Difficulty.valueOf(addProblemRequest.getDifficulty().toUpperCase()))
                     .description(addProblemRequest.getDescription())
+                    .problemNo(generateProblemNo())
                     .build();
             problemRepository.save(problem);
     }
@@ -150,6 +160,24 @@ public class ProblemServiceImpl implements ProblemService {
         problemRepository.save(problem);
     }
 
+    @Override
+    public Page<ProblemDto> getAllProblem(int page,int size) {
+        Pageable pageable = PageRequest.of(page-1, size);
+        Page<Problem> problemPage = problemRepository.findAllByIsDeletedIsFalse(pageable);
+        return problemPage.map(ProblemDto::new);
+    }
+
+    @Override
+    public void deleteProblem(String problemId) {
+        problemRepository.deleteById(problemId);
+    }
+
+    @Override
+    public ProblemDto getProblemById(String problemId) {
+        Optional<Problem> problemOptional = problemRepository.findById(problemId);
+        Problem problem = problemOptional.orElseThrow(() -> new NoSuchElementException("Problem not found with ID: " + problemId));
+        return new ProblemDto(problem);
+    }
 
     // Initiates a Judge0 submission through a POST REST call at /submission, acquiring a token upon completion.
     private JudgeTokenResponse createJudge0Submission(Judge0Request judge0Request){
@@ -228,6 +256,15 @@ public class ProblemServiceImpl implements ProblemService {
                 log.info("Test case Rejected!!!");
                 rejectedCases.add(new RejectedCase(test.getTestCaseInput(), output, test.getExpectedOutput()));
             }
+        }
+    }
+    private Long generateProblemNo() {
+        Query query = new Query().with(Sort.by(Sort.Direction.DESC, "problemNo")).limit(1);
+        Problem lastProblem = mongoOperations.findOne(query, Problem.class);
+        if (lastProblem != null) {
+            return lastProblem.getProblemNo() + 1;
+        } else {
+            return 1L;
         }
     }
 

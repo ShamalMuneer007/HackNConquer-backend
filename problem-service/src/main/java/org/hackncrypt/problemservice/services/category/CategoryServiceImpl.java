@@ -4,10 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.problemservice.exceptions.business.NoSuchValueException;
 import org.hackncrypt.problemservice.exceptions.business.DuplicateValueException;
+import org.hackncrypt.problemservice.model.dto.CategoryDto;
 import org.hackncrypt.problemservice.model.dto.response.GetCategoryResponse;
 import org.hackncrypt.problemservice.model.dto.request.AddCategoryRequest;
 import org.hackncrypt.problemservice.model.entities.Category;
 import org.hackncrypt.problemservice.repositories.CategoryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,13 +29,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<GetCategoryResponse> getAllCategories() {
-        List<Category> categories = categoryRepository.findAllByIsDeletedIsFalse();
-        List<GetCategoryResponse> response = new ArrayList<>();
-        categories.forEach(category -> {
-            response.add(new GetCategoryResponse(category));
-        });
-        return response;
+    public Page<CategoryDto> getAllCategories(int page, int size) {
+        Pageable pageable = PageRequest.of(page-1, size);
+        Page<Category> categoryPage = categoryRepository.findAllByIsDeletedIsFalse(pageable);
+        return categoryPage.map(CategoryDto::new);
     }
 
     @Override
@@ -43,6 +44,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .builder()
                 .categoryName(addCategoryRequest.getCategoryName())
                 .isDeleted(false)
+                .level(addCategoryRequest.getCategoryLevel())
                 .updatedAt(LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
                 .build();

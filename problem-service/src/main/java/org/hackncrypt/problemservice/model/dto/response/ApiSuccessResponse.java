@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.model.dto;
+package org.hackncrypt.problemservice.model.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,4 +11,5 @@ import lombok.Setter;
 @Setter
 public class ApiSuccessResponse {
     private String message;
+    private int status;
 }

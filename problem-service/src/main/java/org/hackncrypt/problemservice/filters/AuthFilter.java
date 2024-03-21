@@ -32,9 +32,9 @@ public class AuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
         log.info("request URI : {}", request.getRequestURI());
-        if (request.getRequestURI().startsWith("/cart/actuator") ||
-                request.getRequestURI().startsWith("/cart/eureka") ||
-                request.getRequestURI().startsWith("/cart/swagger-ui")
+        if (request.getRequestURI().startsWith("/problem/actuator") ||
+                request.getRequestURI().startsWith("/problem/eureka") ||
+                request.getRequestURI().startsWith("/problem/swagger-ui")
         ) {
             filterChain.doFilter(request, response);
             return;

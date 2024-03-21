@@ -18,9 +18,10 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
 @Slf4j
 @RestControllerAdvice
-@Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalExceptionControllerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -46,16 +47,29 @@ public class GlobalExceptionControllerAdvice {
                 .message("Invalid request!!!").build();
         return new ResponseEntity<>(errorResponse,HttpStatus.BAD_REQUEST);
     }
-//    @ExceptionHandler(Exception.class)
-//    @Order(Ordered.HIGHEST_PRECEDENCE)
-//    public ResponseEntity<ApiError> handleAllExceptions(Exception ex, WebRequest webRequest) {
-//        log.error("An error occurred: {}", ex.getMessage());
-//        ApiError apiError = new ApiError(
-//                ex.getMessage(),
-//                LocalDate.now(),
-//                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-//                webRequest.getDescription(false)
-//        );
-//        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
+    @ExceptionHandler(NoSuchElementException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiError> handleNoSuchElementException(NoSuchElementException ex, WebRequest webRequest){
+        log.error("An error occurred: {}", ex.getMessage());
+        ApiError apiError = new ApiError(
+                ex.getMessage(),
+                LocalDate.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                webRequest.getDescription(false)
+        );
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @Order(Ordered.LOWEST_PRECEDENCE)
+    public ResponseEntity<ApiError> handleAllExceptions(Exception ex, WebRequest webRequest) {
+        log.error("An error occurred: {}", ex.getMessage());
+        ApiError apiError = new ApiError(
+                ex.getMessage(),
+                LocalDate.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                webRequest.getDescription(false)
+        );
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 }

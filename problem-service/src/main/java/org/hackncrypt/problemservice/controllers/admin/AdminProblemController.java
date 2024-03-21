@@ -8,13 +8,14 @@ import org.hackncrypt.problemservice.exceptions.judge0.ClientSandboxCodeExecutio
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxCompileError;
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxError;
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxStandardError;
-import org.hackncrypt.problemservice.model.dto.ApiSuccessResponse;
+import org.hackncrypt.problemservice.model.dto.response.ApiSuccessResponse;
 import org.hackncrypt.problemservice.model.dto.request.PatchProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.AddProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.ProblemVerificationRequest;
 import org.hackncrypt.problemservice.model.dto.response.ProblemVerificationResponse;
 import org.hackncrypt.problemservice.services.problem.ProblemService;
 import org.hackncrypt.problemservice.exceptions.judge0.TestCaseTimeOutException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -82,12 +83,17 @@ public class AdminProblemController {
     @PostMapping("/add-problem")
     public ResponseEntity<ApiSuccessResponse> addProblem(@Valid @RequestBody AddProblemRequest addProblemRequest){
         problemService.addProblem(addProblemRequest);
-        return ResponseEntity.ok(new ApiSuccessResponse("Problem added successfully"));
+        return ResponseEntity.ok(new ApiSuccessResponse("Problem added successfully", HttpStatus.OK.value()));
+    }
+    @DeleteMapping("/delete-problem/{problemId}")
+    public ResponseEntity<ApiSuccessResponse> deleteProblem(@PathVariable String problemId){
+        problemService.deleteProblem(problemId);
+        return ResponseEntity.ok(new ApiSuccessResponse("Problem removed successfully",HttpStatus.OK.value()));
     }
     @PatchMapping("/edit-problem/{problemNo}")
     public ResponseEntity<ApiSuccessResponse> patchProblem(@Valid @RequestBody PatchProblemRequest patchProblemRequest, @PathVariable long problemNo){
         problemService.updateProblemDetails(problemNo,patchProblemRequest);
-        return ResponseEntity.ok(new ApiSuccessResponse("Problem updated successfully"));
+        return ResponseEntity.ok(new ApiSuccessResponse("Problem updated successfully", HttpStatus.OK.value()));
     }
 
 

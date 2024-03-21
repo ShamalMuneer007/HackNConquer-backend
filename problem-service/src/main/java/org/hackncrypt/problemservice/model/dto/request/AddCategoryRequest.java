@@ -17,4 +17,6 @@ public class AddCategoryRequest {
     @NotNull
     @Size(min = 5)
     private String categoryName;
+    @NotNull
+    private int categoryLevel;
 }
