@@ -9,7 +9,7 @@ import java.util.Date;
 public class JwtUtil {
 
     private static String jwtSecret;
-    public static void init(String jwtSecret) {
+    public JwtUtil(String jwtSecret) {
         JwtUtil.jwtSecret = jwtSecret;
     }
     public static String getUsernameFromToken(String token){

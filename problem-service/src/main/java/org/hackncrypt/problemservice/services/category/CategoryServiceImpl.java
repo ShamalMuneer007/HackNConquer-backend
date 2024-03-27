@@ -30,7 +30,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Page<CategoryDto> getAllCategories(int page, int size) {
-        Pageable pageable = PageRequest.of(page-1, size);
+        Pageable pageable = PageRequest.of(page>0 ? page-1 : 0, size);
         Page<Category> categoryPage = categoryRepository.findAllByIsDeletedIsFalse(pageable);
         return categoryPage.map(CategoryDto::new);
     }

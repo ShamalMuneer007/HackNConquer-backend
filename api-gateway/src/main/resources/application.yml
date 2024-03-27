@@ -38,6 +38,22 @@ spring:
           uri: lb://problem
           filters:
             - GatewayAuthFilter
+        - id: SUBMISSION
+          predicates:
+            - Path=/submission/**
+          uri: lb://submission
+          filters:
+            - GatewayAuthFilter
+        - id: TEST
+          predicates:
+            - Path=/test/**
+          uri: lb://test
+        - id: CLAN
+          predicates:
+            - Path=/clan/**
+          uri: lb://clan
+          filters:
+            - GatewayAuthFilter
         - id: NOTIFICATION
           predicates:
             - Path=/notification/**

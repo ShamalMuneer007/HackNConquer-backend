@@ -21,4 +21,6 @@ public interface ProblemService {
     void deleteProblem(String problemId);
 
     ProblemDto getProblemById(String problemId);
+
+    ProblemDto getProblemByNumber(Long problemNumber);
 }

@@ -1,0 +1,17 @@
+server:
+  port: 8400
+  servlet:
+    context-path: /submission
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+spring:
+  application:
+    name: submission
+  data:
+    mongodb:
+      uri: mongodb://admin:password@localhost:27017/
+      database: hacknconquer_submission
+  config:
+    import: optional:configserver:http://localhost:8888

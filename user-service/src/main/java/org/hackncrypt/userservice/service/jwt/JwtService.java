@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.exceptions.JwtGenerationException;
+import org.hackncrypt.userservice.model.entities.User;
 import org.hackncrypt.userservice.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -33,7 +34,7 @@ public class JwtService {
         log.info("username : {}",username);
         Date currentDate = new Date();
         try {
-            Long userId = userRepository.findByUsername(username).getUserId();
+            User user = userRepository.findByUsername(username);
             Date expirationTime = new Date(currentDate.getTime() + jwtExpiration);
             List<String> roles = authentication.getAuthorities()
                     .stream()
@@ -42,7 +43,8 @@ public class JwtService {
             return Jwts.builder()
                     .setSubject(username)
                     .claim("role", roles.get(0))
-                    .claim("userId", Long.toString(userId))
+                    .claim("userId", Long.toString(user.getUserId()))
+                    .claim("profileImage",user.getProfileImageUrl())
                     .setIssuedAt(currentDate)
                     .setExpiration(expirationTime)
                     .signWith(SignatureAlgorithm.HS256, jwtSecret)

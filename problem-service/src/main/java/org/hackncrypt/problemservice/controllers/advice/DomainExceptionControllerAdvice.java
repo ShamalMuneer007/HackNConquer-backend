@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.hackncrypt.problemservice.exceptions.business.DuplicateValueException;
 import org.hackncrypt.problemservice.exceptions.business.NoSuchValueException;
+import org.hackncrypt.problemservice.exceptions.judge0.ClientSandboxCodeExecutionError;
 import org.hackncrypt.problemservice.model.dto.error.ApiError;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -24,7 +25,7 @@ public class DomainExceptionControllerAdvice {
     @ExceptionHandler(NoSuchValueException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ApiError> handleNoSuchValueException(NoSuchValueException ex,WebRequest webRequest){
-        log.warn(ex.getMessage());
+        log.warn(ex.getMessage(),ex);
         ApiError apiError = new ApiError(
                 ex.getMessage(),
                 LocalDate.now(),
@@ -36,7 +37,7 @@ public class DomainExceptionControllerAdvice {
     @ExceptionHandler(DuplicateValueException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ApiError> handleDuplicateValueException(DuplicateValueException ex, WebRequest webRequest){
-        log.warn(ex.getMessage());
+        log.warn(ex.getMessage(),ex);
         ApiError apiError = new ApiError(
                 ex.getMessage(),
                 LocalDate.now(),
@@ -45,4 +46,6 @@ public class DomainExceptionControllerAdvice {
         );
         return ResponseEntity.badRequest().body(apiError);
     }
+
+
 }

@@ -5,13 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.enums.Role;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
 import org.hackncrypt.userservice.exceptions.UserAuthenticationException;
+import org.hackncrypt.userservice.integrations.notificationservice.NotificationFeignProxy;
 import org.hackncrypt.userservice.model.dto.UserDto;
 import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
 import org.hackncrypt.userservice.model.dto.auth.OtpDto;
 import org.hackncrypt.userservice.model.dto.auth.request.LoginRequest;
 import org.hackncrypt.userservice.model.dto.auth.request.RegisterRequest;
 import org.hackncrypt.userservice.model.entities.User;
-import org.hackncrypt.userservice.proxies.feign.NotificationFeignProxy;
 import org.hackncrypt.userservice.repositories.UserRepository;
 import org.hackncrypt.userservice.service.jwt.JwtService;
 import org.springframework.amqp.AmqpException;
@@ -150,9 +150,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserDto> getAllUsers(int page, int size) {
-        Pageable pageable = PageRequest.of(page-1, size);
-        Page<User> userPage = userRepository.findAllByIsDeletedIsFalse(pageable);
-        return userPage.map(UserDto::new);
+            Pageable pageable = PageRequest.of(page-1, size);
+            Page<User> userPage = userRepository.findAllByIsDeletedIsFalse(pageable);
+            return userPage.map(UserDto::new);
     }
 
     //Validate User Inputs

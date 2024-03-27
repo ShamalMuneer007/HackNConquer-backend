@@ -28,8 +28,13 @@ public class ProblemController {
         return ResponseEntity.ok(new GetAllProblemResponse(problems, HttpStatus.OK.value()));
     }
     @GetMapping("/get-problem/{problemId}")
-    public ResponseEntity<ProblemDto> getProblem(@PathVariable String problemId){
+    public ResponseEntity<ProblemDto> getProblemByName(@PathVariable String problemId){
         log.info("Fetching problem info of id : {}",problemId);
         return ResponseEntity.ok(problemService.getProblemById(problemId));
+    }
+    @GetMapping("/get-problem-info/{problemNumber}")
+    public ResponseEntity<ProblemDto> getProblemByNumber(@PathVariable Long problemNumber){
+        log.info("Fetching problem info of problem no : {}",problemNumber);
+        return ResponseEntity.ok(problemService.getProblemByNumber(problemNumber));
     }
 }

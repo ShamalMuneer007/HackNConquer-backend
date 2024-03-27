@@ -7,22 +7,34 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="submission-service" />
+        <module name="config-server" />
+        <module name="problem-service" />
         <module name="api-gateway" />
         <module name="name-server" />
-        <module name="config-server" />
+        <module name="test-service" />
         <module name="user-service" />
-        <module name="problem-service" />
+        <module name="auth-config" />
+        <module name="clan-service" />
         <module name="notification-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="hacknconquer-auth" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway" options="-parameters" />
+      <module name="auth-config" options="-parameters" />
+      <module name="clan-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
+      <module name="hacknconquer-auth" options="-parameters" />
       <module name="name-server" options="-parameters" />
       <module name="notification-service" options="-parameters" />
       <module name="problem-service" options="-parameters" />
+      <module name="submission-service" options="-parameters" />
+      <module name="test-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>
   </component>

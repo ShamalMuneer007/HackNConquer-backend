@@ -7,6 +7,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class TestCase {
     private String testCaseInput;
     private String expectedOutput;
