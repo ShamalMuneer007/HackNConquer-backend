@@ -24,8 +24,8 @@ public class SubmissionController {
                                                                  HttpServletRequest request){
 
         Long userId = Long.parseLong((String)request.getAttribute("userId"));
-        log.info(String.valueOf(userId));
-        return ResponseEntity.ok(submissionService.submitSolution(submitSolutionRequest,userId));
+        String authHeader = request.getHeader("Authorization");
+        return ResponseEntity.ok(submissionService.submitSolution(submitSolutionRequest,userId,authHeader));
     }
     @GetMapping("/get-problem-submission/{problemId}")
     public ResponseEntity<List<SubmissionDto>> getAllProblemSubmission(@PathVariable String problemId, HttpServletRequest request){

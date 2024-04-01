@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.model.dto;
+package org.hackncrypt.testservice.models.dto;
 
 import lombok.*;
 

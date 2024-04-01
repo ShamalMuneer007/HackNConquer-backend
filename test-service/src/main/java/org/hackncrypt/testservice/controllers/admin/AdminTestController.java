@@ -2,7 +2,7 @@ package org.hackncrypt.testservice.controllers.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.problemservice.model.dto.request.AddTestCaseRequest;
+import org.hackncrypt.testservice.models.dto.request.AddTestCaseRequest;
 import org.hackncrypt.testservice.services.TestService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

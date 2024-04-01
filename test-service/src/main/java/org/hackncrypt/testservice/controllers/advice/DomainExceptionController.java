@@ -1,9 +1,12 @@
 package org.hackncrypt.testservice.controllers.advice;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.problemservice.exceptions.business.DuplicateValueException;
-import org.hackncrypt.problemservice.exceptions.judge0.ClientSandboxCodeExecutionError;
-import org.hackncrypt.problemservice.model.dto.error.ApiError;
+import org.hackncrypt.testservice.exceptions.judge0.ClientSandboxCodeExecutionError;
+import org.hackncrypt.testservice.exceptions.judge0.SandboxCompileError;
+import org.hackncrypt.testservice.exceptions.judge0.SandboxStandardError;
+import org.hackncrypt.testservice.models.dto.error.ApiError;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,6 +18,7 @@ import java.time.LocalDate;
 
 @RestControllerAdvice
 @Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class DomainExceptionController {
     @ExceptionHandler(ClientSandboxCodeExecutionError.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -28,4 +32,29 @@ public class DomainExceptionController {
         );
         return ResponseEntity.badRequest().body(apiError);
     }
+    @ExceptionHandler(SandboxCompileError.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiError> handleSandboxCompileError(SandboxCompileError ex, WebRequest webRequest){
+        log.warn(ex.getMessage(),ex);
+        ApiError apiError = new ApiError(
+                ex.getMessage(),
+                LocalDate.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                webRequest.getDescription(false)
+        );
+        return ResponseEntity.badRequest().body(apiError);
+    }
+    @ExceptionHandler(SandboxStandardError.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiError> handleSandboxStandardError(SandboxStandardError ex, WebRequest webRequest){
+        log.warn(ex.getMessage(),ex);
+        ApiError apiError = new ApiError(
+                ex.getMessage(),
+                LocalDate.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                webRequest.getDescription(false)
+        );
+        return ResponseEntity.badRequest().body(apiError);
+    }
+
 }

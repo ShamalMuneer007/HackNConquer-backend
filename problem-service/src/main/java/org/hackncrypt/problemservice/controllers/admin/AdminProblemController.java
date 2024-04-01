@@ -1,5 +1,6 @@
 package org.hackncrypt.problemservice.controllers.admin;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.problemservice.annotations.Authorized;
@@ -81,8 +82,8 @@ public class AdminProblemController {
     }
 
     @PostMapping("/add-problem")
-    public ResponseEntity<ApiSuccessResponse> addProblem(@Valid @RequestBody AddProblemRequest addProblemRequest){
-        problemService.addProblem(addProblemRequest);
+    public ResponseEntity<ApiSuccessResponse> addProblem(@Valid @RequestBody AddProblemRequest addProblemRequest, HttpServletRequest servletRequest){
+        problemService.addProblem(addProblemRequest,servletRequest);
         return ResponseEntity.ok(new ApiSuccessResponse("Problem added successfully", HttpStatus.OK.value()));
     }
     @DeleteMapping("/delete-problem/{problemId}")

@@ -2,7 +2,7 @@ package org.hackncrypt.testservice.controllers.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.submissionservice.models.dto.request.SubmitSolutionRequest;
+import org.hackncrypt.testservice.models.dto.request.SubmitSolutionRequest;
 import org.hackncrypt.testservice.models.dto.response.RunAndTestResponse;
 import org.hackncrypt.testservice.services.TestService;
 import org.springframework.http.ResponseEntity;

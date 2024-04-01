@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.exceptions.business;
+package org.hackncrypt.userservice.exceptions;
 
 public class NoSuchValueException extends RuntimeException {
     public NoSuchValueException(String message) {

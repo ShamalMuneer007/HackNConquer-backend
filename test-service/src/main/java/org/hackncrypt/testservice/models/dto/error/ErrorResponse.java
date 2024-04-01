@@ -1,9 +1,8 @@
-package org.hackncrypt.problemservice.model.dto.error;
+package org.hackncrypt.testservice.models.dto.error;
 
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 @Getter

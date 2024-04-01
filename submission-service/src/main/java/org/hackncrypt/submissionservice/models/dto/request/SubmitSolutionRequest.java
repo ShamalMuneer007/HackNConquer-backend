@@ -19,5 +19,7 @@ public class SubmitSolutionRequest {
     @NotNull
     private String solutionCode;
     @NotNull
+    private Integer problemLevel;
+    @NotNull
     private String driverCode;
 }

@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.model.dto.testCases;
+package org.hackncrypt.submissionservice.models.dto.testCases;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

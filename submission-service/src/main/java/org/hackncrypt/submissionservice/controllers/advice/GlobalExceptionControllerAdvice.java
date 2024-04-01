@@ -1,11 +1,16 @@
 package org.hackncrypt.submissionservice.controllers.advice;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.problemservice.model.dto.error.ApiError;
-import org.hackncrypt.problemservice.model.dto.error.ErrorResponse;
+import org.hackncrypt.submissionservice.models.dto.error.ApiError;
+import org.hackncrypt.submissionservice.models.dto.error.ErrorResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +64,23 @@ public class GlobalExceptionControllerAdvice {
         );
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiError> handleFeignException(FeignException ex, WebRequest webRequest) {
+           try{
+            ObjectMapper objectMapper = JsonMapper.builder()
+                    .findAndAddModules()
+                    .build();
+            ApiError apiError = objectMapper.readValue(ex.contentUTF8(), ApiError.class);
+            log.error("FEIGN ERROR : {}",apiError);
+               return new ResponseEntity<>(apiError, HttpStatusCode.valueOf(ex.status()));
+
+        } catch (JsonProcessingException e) {
+            log.error("Error deserializing Feign exception: {}", e.getMessage());
+            ApiError fallbackError = new ApiError("Error deserializing Feign exception", LocalDate.now(), ex.status(), webRequest.getDescription(false));
+            return ResponseEntity.status(HttpStatusCode.valueOf(ex.status()))
+                    .body(fallbackError);
+        }
+    }
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @Order(Ordered.LOWEST_PRECEDENCE)
@@ -72,4 +94,5 @@ public class GlobalExceptionControllerAdvice {
         );
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 }

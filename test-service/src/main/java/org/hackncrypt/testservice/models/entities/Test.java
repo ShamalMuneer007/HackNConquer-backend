@@ -1,7 +1,7 @@
 package org.hackncrypt.testservice.models.entities;
 
 import lombok.*;
-import org.hackncrypt.problemservice.model.dto.testCases.TestCase;
+import org.hackncrypt.testservice.models.dto.testCases.TestCase;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

@@ -14,12 +14,13 @@
         <module name="name-server" />
         <module name="test-service" />
         <module name="user-service" />
-        <module name="auth-config" />
         <module name="clan-service" />
         <module name="notification-service" />
+        <module name="leaderboard-service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="auth-config" target="17" />
       <module name="hacknconquer-auth" target="17" />
     </bytecodeTargetLevel>
   </component>
@@ -30,6 +31,7 @@
       <module name="clan-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="hacknconquer-auth" options="-parameters" />
+      <module name="leaderboard-service" options="-parameters" />
       <module name="name-server" options="-parameters" />
       <module name="notification-service" options="-parameters" />
       <module name="problem-service" options="-parameters" />

@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.model.dto.error;
+package org.hackncrypt.submissionservice.models.dto.error;
 
 import lombok.*;
 

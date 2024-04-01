@@ -7,7 +7,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class SubmissionStatus {
+public class JudgeSubmissionStatus {
     int id;
     String description;
 }

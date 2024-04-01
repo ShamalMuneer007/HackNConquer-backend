@@ -3,7 +3,7 @@ package org.hackncrypt.problemservice.model.dto.response;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-import org.hackncrypt.problemservice.model.dto.SubmissionStatus;
+import org.hackncrypt.problemservice.model.dto.JudgeSubmissionStatus;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,5 +23,5 @@ public class JudgeSubmissionResponse {
     @JsonProperty
     private String compile_output;
     @JsonProperty
-    private SubmissionStatus status = new SubmissionStatus();
+    private JudgeSubmissionStatus status = new JudgeSubmissionStatus();
 }

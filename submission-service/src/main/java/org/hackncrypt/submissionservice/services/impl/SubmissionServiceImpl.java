@@ -2,9 +2,12 @@ package org.hackncrypt.submissionservice.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hackncrypt.submissionservice.enums.SubmissionStatus;
 import org.hackncrypt.submissionservice.exceptions.technical.SolutionSubmissionException;
 import org.hackncrypt.submissionservice.integrations.testservice.TestFeignProxy;
+import org.hackncrypt.submissionservice.integrations.userservice.UserFeignProxy;
 import org.hackncrypt.submissionservice.models.dto.SubmissionDto;
+import org.hackncrypt.submissionservice.models.dto.request.IncreaseXpRequest;
 import org.hackncrypt.submissionservice.models.dto.request.SubmitSolutionRequest;
 import org.hackncrypt.submissionservice.models.dto.response.RunAndTestResponse;
 import org.hackncrypt.submissionservice.models.dto.response.SubmitSolutionResponse;
@@ -15,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,25 +28,35 @@ import java.util.List;
 public class SubmissionServiceImpl implements SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final TestFeignProxy testFeignProxy;
+    private final UserFeignProxy userFeignProxy;
     @Override
-    public SubmitSolutionResponse submitSolution(SubmitSolutionRequest submitSolutionRequest, Long userId) {
-        ResponseEntity<RunAndTestResponse> response =  testFeignProxy.runAndTestSolution(submitSolutionRequest);
+    public SubmitSolutionResponse submitSolution(SubmitSolutionRequest submitSolutionRequest, Long userId, String authHeader) {
+        ResponseEntity<RunAndTestResponse> response =  testFeignProxy.runAndTestSolution(submitSolutionRequest,authHeader);
         RunAndTestResponse solutionResponse = response.getBody();
-        if(response.getStatusCode() == HttpStatus.OK &&  solutionResponse != null){
-            Submission submission = Submission
-                    .builder()
-                    .submissionStatus(solutionResponse.getSubmissionStatus())
-                    .averageMemory(solutionResponse.getAverageMemory())
-                    .averageMemory(solutionResponse.getAverageMemory())
-                    .problemId(submitSolutionRequest.getProblemId())
-                    .userId(userId)
-                    .build();
-            submissionRepository.save(submission);
-            return new SubmitSolutionResponse(solutionResponse);
+        if(response.getStatusCode() != HttpStatus.OK || solutionResponse == null){
+            throw new SolutionSubmissionException("No solution Response !!!");
         }
-        else{
-            throw new SolutionSubmissionException("");
+        if(solutionResponse.getSubmissionStatus().equals(SubmissionStatus.ACCEPTED)){
+            IncreaseXpRequest increaseXpRequest =
+                    new IncreaseXpRequest(userId,submitSolutionRequest.getProblemLevel()*10);
+            userFeignProxy.increaseUserLevel(increaseXpRequest);
         }
+        Submission submission = Submission
+                .builder()
+                .submissionStatus(solutionResponse.getSubmissionStatus())
+                .averageMemory(solutionResponse.getAverageMemory())
+                .averageTime(solutionResponse.getAverageTime())
+                .problemId(submitSolutionRequest.getProblemId())
+                .userId(userId)
+                .submittedAt(LocalDateTime.now())
+                .solutionCode(submitSolutionRequest.getSolutionCode())
+                .acceptedCases(solutionResponse.getAcceptedCases())
+                .rejectedCases(solutionResponse.getRejectedCases())
+                .totalTestCases(solutionResponse.getTotalTestCases())
+                .build();
+        submissionRepository.save(submission);
+        return new SubmitSolutionResponse(solutionResponse);
+
     }
 
     @Override
@@ -50,6 +64,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         List<Submission> submissions = submissionRepository.findByProblemIdAndUserId(problemId,userId);
         List<SubmissionDto> submissionDtos = new ArrayList<>();
         submissions.forEach(submission -> {
+            log.info(submission.toString());
             SubmissionDto submissionDto = new SubmissionDto(submission);
             submissionDtos.add(submissionDto);
         });

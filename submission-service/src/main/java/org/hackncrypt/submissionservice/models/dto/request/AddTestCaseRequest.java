@@ -1,7 +1,7 @@
-package org.hackncrypt.problemservice.model.dto.request;
+package org.hackncrypt.submissionservice.models.dto.request;
 
 import lombok.*;
-import org.hackncrypt.problemservice.model.dto.testCases.TestCase;
+import org.hackncrypt.submissionservice.models.dto.testCases.TestCase;
 
 import java.util.List;
 

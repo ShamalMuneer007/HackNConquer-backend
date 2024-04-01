@@ -1,6 +1,5 @@
-package org.hackncrypt.submissionservice.models.dto.request;
+package org.hackncrypt.testservice.models.dto.request;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
 
@@ -11,13 +10,10 @@ import org.springframework.validation.annotation.Validated;
 @ToString
 @Validated
 public class SubmitSolutionRequest {
-    @NotNull
     private String problemId;
-    @NotNull
+
     private Integer languageId;
     private String language;
-    @NotNull
     private String solutionCode;
-    @NotNull
     private String driverCode;
 }

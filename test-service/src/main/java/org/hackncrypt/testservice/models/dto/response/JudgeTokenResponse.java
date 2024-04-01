@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.model.dto.response;
+package org.hackncrypt.testservice.models.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

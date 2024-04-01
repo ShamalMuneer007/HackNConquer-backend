@@ -7,7 +7,7 @@ import org.hackncrypt.submissionservice.models.dto.response.SubmitSolutionRespon
 import java.util.List;
 
 public interface SubmissionService {
-    SubmitSolutionResponse submitSolution(SubmitSolutionRequest submitSolutionRequest,Long userId);
+    SubmitSolutionResponse submitSolution(SubmitSolutionRequest submitSolutionRequest,Long userId,String authHeader);
 
     List<SubmissionDto> getProblemSubmission(String problemId, Long userId);
 }

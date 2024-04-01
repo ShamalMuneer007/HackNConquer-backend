@@ -2,10 +2,12 @@ package org.hackncrypt.testservice.util;
 
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 
 import java.util.Date;
 
+@Slf4j
 public class JwtUtil {
 
     private static String jwtSecret;
@@ -35,6 +37,8 @@ public class JwtUtil {
     }
     public static boolean validateToken(String token){
         try {
+            log.info(jwtSecret);
+            log.info("Token ==> {}",token);
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
             return true;
         }

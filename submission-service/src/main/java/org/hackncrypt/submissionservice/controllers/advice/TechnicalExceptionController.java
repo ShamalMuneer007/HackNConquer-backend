@@ -2,7 +2,8 @@ package org.hackncrypt.submissionservice.controllers.advice;
 
 import com.mongodb.MongoException;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.problemservice.model.dto.error.ApiError;
+import org.hackncrypt.submissionservice.models.dto.error.ApiError;
+import org.hackncrypt.submissionservice.exceptions.judge0.TestCaseTimeOutException;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataAccessException;
@@ -30,6 +31,18 @@ public class TechnicalExceptionController {
                 request.getDescription(false)
         );
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(TestCaseTimeOutException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<ApiError> handleTestCaseTimeOutException(TestCaseTimeOutException ex, WebRequest webRequest){
+        log.warn(ex.getMessage(),ex);
+        ApiError apiError = new ApiError(
+                ex.getMessage(),
+                LocalDate.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                webRequest.getDescription(false)
+        );
+        return ResponseEntity.badRequest().body(apiError);
     }
     @ExceptionHandler(MongoException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

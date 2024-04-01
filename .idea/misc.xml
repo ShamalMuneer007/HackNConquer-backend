@@ -18,10 +18,12 @@
         <option value="$PROJECT_DIR$/clan-service/pom.xml" />
         <option value="$PROJECT_DIR$/hacknconquer-auth/pom.xml" />
         <option value="$PROJECT_DIR$/auth-config/pom.xml" />
+        <option value="$PROJECT_DIR$/leaderboard-service/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
       <set>
+        <option value="$PROJECT_DIR$/auth-config/pom.xml" />
         <option value="$PROJECT_DIR$/hacknconquer-auth/pom.xml" />
       </set>
     </option>

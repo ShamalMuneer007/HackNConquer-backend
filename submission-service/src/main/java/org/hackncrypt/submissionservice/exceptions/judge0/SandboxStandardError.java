@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.exceptions.judge0;
+package org.hackncrypt.submissionservice.exceptions.judge0;
 
 public class SandboxStandardError extends RuntimeException {
     public SandboxStandardError(String message,Exception e) {

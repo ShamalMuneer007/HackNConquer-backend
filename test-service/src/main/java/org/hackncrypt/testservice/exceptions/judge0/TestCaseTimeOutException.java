@@ -1,4 +1,4 @@
-package org.hackncrypt.problemservice.exceptions.judge0;
+package org.hackncrypt.testservice.exceptions.judge0;
 
 public class TestCaseTimeOutException extends RuntimeException {
     public TestCaseTimeOutException(String message,Exception e) {

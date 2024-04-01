@@ -3,9 +3,11 @@ package org.hackncrypt.testservice.controllers.advice;
 import com.mongodb.MongoException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.Response;
-import org.hackncrypt.problemservice.exceptions.InternalServerException;
-import org.hackncrypt.problemservice.exceptions.judge0.SandboxError;
-import org.hackncrypt.problemservice.model.dto.error.ApiError;
+import org.hackncrypt.testservice.exceptions.judge0.SandboxError;
+import org.hackncrypt.testservice.exceptions.technical.InternalServerException;
+import org.hackncrypt.testservice.models.dto.error.ApiError;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.time.LocalDate;
 
 @RestControllerAdvice
 @Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class TechnicalExceptionController {
     @ExceptionHandler(InternalServerException.class)
     public ResponseEntity<ApiError> handleInternalServerException(InternalServerException ex,WebRequest request){
@@ -31,7 +34,7 @@ public class TechnicalExceptionController {
         return ResponseEntity.internalServerError().body(apiError);
     }
     @ExceptionHandler(SandboxError.class)
-    public ResponseEntity<ApiError> handleSandboxError(SandboxError ex,WebRequest request){
+    public ResponseEntity<ApiError> handleSandboxError(SandboxError ex, WebRequest request){
         log.error("Something went wrong in Judge0 sandbox {}", ex.getMessage(), ex);
         ApiError apiError = new ApiError(
                 ex.getMessage(),

@@ -1,8 +1,8 @@
 package org.hackncrypt.testservice.controllers.advice;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.problemservice.model.dto.error.ApiError;
-import org.hackncrypt.problemservice.model.dto.error.ErrorResponse;
+import org.hackncrypt.testservice.models.dto.error.ApiError;
+import org.hackncrypt.testservice.models.dto.error.ErrorResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;

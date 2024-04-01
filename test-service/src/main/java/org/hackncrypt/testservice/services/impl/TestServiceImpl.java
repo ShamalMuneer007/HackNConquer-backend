@@ -2,24 +2,22 @@ package org.hackncrypt.testservice.services.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.problemservice.exceptions.InternalServerException;
-import org.hackncrypt.problemservice.exceptions.judge0.ClientSandboxCodeExecutionError;
-import org.hackncrypt.problemservice.exceptions.judge0.SandboxCompileError;
-import org.hackncrypt.problemservice.exceptions.judge0.SandboxError;
-import org.hackncrypt.problemservice.exceptions.judge0.SandboxStandardError;
-import org.hackncrypt.problemservice.model.dto.request.AddTestCaseRequest;
-import org.hackncrypt.problemservice.model.dto.request.Judge0Request;
-import org.hackncrypt.problemservice.model.dto.request.ProblemVerificationRequest;
-import org.hackncrypt.problemservice.model.dto.response.JudgeSubmissionResponse;
-import org.hackncrypt.problemservice.model.dto.response.JudgeTokenResponse;
-import org.hackncrypt.problemservice.model.dto.response.ProblemVerificationResponse;
-import org.hackncrypt.problemservice.model.dto.testCases.AcceptedCase;
-import org.hackncrypt.problemservice.model.dto.testCases.RejectedCase;
-import org.hackncrypt.problemservice.model.dto.testCases.TestCase;
-import org.hackncrypt.submissionservice.enums.SubmissionStatus;
-import org.hackncrypt.submissionservice.models.dto.request.SubmitSolutionRequest;
-import org.hackncrypt.submissionservice.models.dto.response.SubmitSolutionResponse;
+import org.hackncrypt.testservice.enums.SubmissionStatus;
+import org.hackncrypt.testservice.exceptions.judge0.ClientSandboxCodeExecutionError;
+import org.hackncrypt.testservice.exceptions.judge0.SandboxCompileError;
+import org.hackncrypt.testservice.exceptions.judge0.SandboxError;
+import org.hackncrypt.testservice.exceptions.judge0.SandboxStandardError;
+import org.hackncrypt.testservice.exceptions.technical.InternalServerException;
+import org.hackncrypt.testservice.models.dto.TestCaseDto;
+import org.hackncrypt.testservice.models.dto.request.AddTestCaseRequest;
+import org.hackncrypt.testservice.models.dto.request.Judge0Request;
+import org.hackncrypt.testservice.models.dto.request.SubmitSolutionRequest;
+import org.hackncrypt.testservice.models.dto.response.JudgeSubmissionResponse;
+import org.hackncrypt.testservice.models.dto.response.JudgeTokenResponse;
 import org.hackncrypt.testservice.models.dto.response.RunAndTestResponse;
+import org.hackncrypt.testservice.models.dto.testCases.AcceptedCase;
+import org.hackncrypt.testservice.models.dto.testCases.RejectedCase;
+import org.hackncrypt.testservice.models.dto.testCases.TestCase;
 import org.hackncrypt.testservice.models.entities.Test;
 import org.hackncrypt.testservice.repositories.TestRepository;
 import org.hackncrypt.testservice.services.TestService;
@@ -29,6 +27,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
@@ -44,9 +43,9 @@ public class TestServiceImpl implements TestService {
         Queue<RuntimeException> exception = new ConcurrentLinkedQueue<>();
         Queue<Double> timeTaken = new ConcurrentLinkedQueue<>();
         Queue<Double> memoryTaken = new ConcurrentLinkedQueue<>();
-        List<Test> testCases = testRepository.findByProblemId(submitSolutionRequest.getProblemId());
+        List<Test> allTestCases = testRepository.findByProblemId(submitSolutionRequest.getProblemId());
         Executor executor = Executors.newFixedThreadPool(10);
-        List<CompletableFuture<Void>> futures = testCases.get(0).getTestCases()
+        List<CompletableFuture<Void>> futures = allTestCases.get(0).getTestCases()
                 .stream()
                 .map(test -> CompletableFuture.runAsync(() -> {
                     try {
@@ -74,8 +73,10 @@ public class TestServiceImpl implements TestService {
         RunAndTestResponse response = new RunAndTestResponse();
         double avgMemory = memoryTaken.stream().reduce(0D, Double::sum) / memoryTaken.size();
         double avgTime = timeTaken.stream().reduce(0D, Double::sum) / timeTaken.size();
-        response.setAverageMemory(avgMemory);
-        response.setAverageTime(avgTime);
+        double averageMemoryInMB = avgMemory / 1024.0;
+        double averageTimeInSeconds = avgTime * 1000.0;
+        response.setAverageMemory(Math.round(averageMemoryInMB*100.0)/100.0);
+        response.setAverageTime(Math.round(averageTimeInSeconds*100.0)/100.0);
         if (!rejectedCases.isEmpty()) {
             log.info("All test cases does not match with given expected output");
             response.setSubmissionStatus(SubmissionStatus.REJECTED);
@@ -85,6 +86,7 @@ public class TestServiceImpl implements TestService {
         }
         response.setRejectedCases(rejectedCases.stream().toList());
         response.setAcceptedCases(acceptedCases.stream().toList());
+        response.setTotalTestCases(allTestCases.get(0).getTestCases().size());
         return response;
     }
 
@@ -99,6 +101,18 @@ public class TestServiceImpl implements TestService {
         log.info(String.valueOf(test));
         log.info("||| SAVING TEST CASE |||");
         testRepository.save(test);
+    }
+
+    @Override
+    public List<TestCaseDto> getProblemTestCases(String problemId) {
+        List<TestCase> tests = testRepository.findByProblemId(problemId).get(0).getTestCases();
+        List<TestCaseDto> testCaseDtoList = new ArrayList<>();
+        AtomicInteger index = new AtomicInteger(0);
+        tests.forEach(test -> {
+            index.getAndIncrement();
+            testCaseDtoList.add(new TestCaseDto(test,index.get()));
+        });
+        return testCaseDtoList;
     }
 
 
@@ -134,7 +148,7 @@ public class TestServiceImpl implements TestService {
         request.setStdin(Base64.getEncoder().encodeToString(test.getTestCaseInput().getBytes()));
 
         JudgeTokenResponse submissionCreationResponse = createJudge0Submission(request);
-        JudgeSubmissionResponse submissionResponse = new JudgeSubmissionResponse();
+        JudgeSubmissionResponse submissionResponse;
 
         do {
             try {

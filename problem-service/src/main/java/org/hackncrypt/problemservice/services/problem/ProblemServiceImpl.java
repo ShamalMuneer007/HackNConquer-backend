@@ -1,5 +1,6 @@
 package org.hackncrypt.problemservice.services.problem;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.problemservice.enums.Difficulty;
@@ -99,7 +100,7 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     @Transactional
-    public void addProblem(AddProblemRequest addProblemRequest) {
+    public void addProblem(AddProblemRequest addProblemRequest, HttpServletRequest request) {
         if (problemRepository.existsByProblemNameIgnoreCase(addProblemRequest.getProblemName())) {
             log.warn("Problem with same name already exists");
             throw new DuplicateValueException("Problem with the same name already exists !!!");
@@ -122,7 +123,8 @@ public class ProblemServiceImpl implements ProblemService {
         problem = problemRepository.save(problem);
         AddTestCaseRequest addTestCaseRequest = new AddTestCaseRequest(problem.getProblemId(), addProblemRequest.getTestCases());
         log.info("Data passed : {}", addTestCaseRequest);
-        testFeignProxy.addProblemTestCases(addTestCaseRequest);
+        String authorizationHeader = request.getHeader("Authorization");
+        testFeignProxy.addProblemTestCases(addTestCaseRequest,authorizationHeader);
     }
 
     @Override

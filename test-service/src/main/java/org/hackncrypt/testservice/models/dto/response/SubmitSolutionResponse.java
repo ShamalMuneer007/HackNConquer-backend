@@ -1,10 +1,9 @@
-package org.hackncrypt.submissionservice.models.dto.response;
+package org.hackncrypt.testservice.models.dto.response;
 
 import lombok.*;
-import org.hackncrypt.problemservice.model.dto.testCases.AcceptedCase;
-import org.hackncrypt.problemservice.model.dto.testCases.RejectedCase;
-import org.hackncrypt.submissionservice.enums.SubmissionStatus;
-import org.hackncrypt.submissionservice.models.entities.Submission;
+import org.hackncrypt.testservice.enums.SubmissionStatus;
+import org.hackncrypt.testservice.models.dto.testCases.AcceptedCase;
+import org.hackncrypt.testservice.models.dto.testCases.RejectedCase;
 
 import java.util.List;
 

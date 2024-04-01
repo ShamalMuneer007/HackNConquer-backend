@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.submissionservice.constants.Constants;
+import org.hackncrypt.testservice.constants.Constants;
 import org.hackncrypt.testservice.util.JwtUtil;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;

@@ -1,5 +1,6 @@
 package org.hackncrypt.problemservice.services.problem;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.hackncrypt.problemservice.model.dto.ProblemDto;
 import org.hackncrypt.problemservice.model.dto.request.PatchProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.AddProblemRequest;
@@ -12,7 +13,7 @@ import java.util.List;
 public interface ProblemService {
     ProblemVerificationResponse verifyProblem(ProblemVerificationRequest problemVerificationRequest) throws Exception;
 
-    void addProblem(AddProblemRequest addProblemRequest);
+    void addProblem(AddProblemRequest addProblemRequest, HttpServletRequest request);
 
     void updateProblemDetails(long problemNo,PatchProblemRequest patchProblemRequest);
 

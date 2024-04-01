@@ -7,10 +7,11 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(name = "test",path = "/test")
 public interface TestFeignProxy {
 
     @PostMapping("/api/v1/user/run-and-test-solution")
-    ResponseEntity<RunAndTestResponse> runAndTestSolution(@RequestBody SubmitSolutionRequest submitSolutionRequest);
+    ResponseEntity<RunAndTestResponse> runAndTestSolution(@RequestBody SubmitSolutionRequest submitSolutionRequest, @RequestHeader("Authorization") String authorizationHeader);
 }
