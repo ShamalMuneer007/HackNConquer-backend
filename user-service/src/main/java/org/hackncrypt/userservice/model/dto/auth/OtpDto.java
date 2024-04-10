@@ -14,5 +14,5 @@ public class OtpDto {
     @JsonProperty("email")
     private String email;
     @JsonProperty("otp")
-    private Integer otp;
+    private String otp;
 }

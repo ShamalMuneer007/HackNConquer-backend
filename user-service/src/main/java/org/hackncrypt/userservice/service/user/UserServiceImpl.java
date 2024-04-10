@@ -1,5 +1,6 @@
 package org.hackncrypt.userservice.service.user;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.enums.Role;
@@ -13,7 +14,7 @@ import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
 import org.hackncrypt.userservice.model.dto.auth.OtpDto;
 import org.hackncrypt.userservice.model.dto.auth.request.LoginRequest;
 import org.hackncrypt.userservice.model.dto.auth.request.RegisterRequest;
-import org.hackncrypt.userservice.model.dto.request.IncreaseXpRequest;
+import org.hackncrypt.userservice.model.dto.request.    IncreaseXpRequest;
 import org.hackncrypt.userservice.model.entities.User;
 import org.hackncrypt.userservice.repositories.UserRepository;
 import org.hackncrypt.userservice.service.jwt.JwtService;
@@ -90,10 +91,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean validateUserOtp(String email, Integer otp) {
+    public boolean validateUserOtp(String email, String otp) {
         OtpDto otpDto = new OtpDto(email,otp);
         try {
             Boolean response = false;
+            log.info("USER ENTERED OTP : {}",otp);
             response = notificationFeignProxy.validateOtp(otpDto).getBody();
             return response;
         }
@@ -176,11 +178,26 @@ public class UserServiceImpl implements UserService {
         User user = userOptional
                 .orElseThrow(noUserException);
         int newXp = user.getXp() + increaseXpRequest.getXp();
-        user.setXp(newXp % (100 * user.getLevel()));;
-        if (newXp >= 100 * (user.getLevel() + 1)) {
-            user.setLevel(user.getLevel() + 1);
+        while (newXp >= user.getCurrentMaxXp()) {
+            int prevMaxXp = user.getCurrentMaxXp();
+            levelUp(user);
+            newXp = Math.abs(newXp - prevMaxXp);
         }
+        user.setXp(newXp);
         userRepository.save(user);
+    }
+
+    private void levelUp(User user) {
+        user.setLevel(user.getLevel() + 1);
+        user.setCurrentMaxXp(user.getLevel() * 50);
+    }
+
+    @Override
+    public UserDto getUserData(HttpServletRequest request) {
+        Long userId = Long.valueOf(jwtService.getUserIdFromRequest(request));
+        Optional<User> userOptional = userRepository.findById(userId);
+        User user = userOptional.orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        return new UserDto(user);
     }
 
     //Validate User Inputs

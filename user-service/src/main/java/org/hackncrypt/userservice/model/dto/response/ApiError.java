@@ -14,4 +14,5 @@ public class ApiError {
     private LocalDate timeStamp;
     private int status;
     private String requestPath;
+    private String trace;
 }

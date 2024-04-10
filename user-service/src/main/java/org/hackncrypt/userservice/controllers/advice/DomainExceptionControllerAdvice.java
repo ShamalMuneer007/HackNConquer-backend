@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -22,27 +23,28 @@ import java.time.LocalDate;
 public class DomainExceptionControllerAdvice {
     @ExceptionHandler(InvalidInputException.class)
     public ResponseEntity<ApiError> handleInvalidUserInputException(InvalidInputException ex, WebRequest request){
-        log.error(ex.getMessage());
+        log.error(ex.getMessage()+"\n"+ Arrays.toString(ex.getStackTrace()));
         ApiError apiError = new ApiError(ex.getMessage(), LocalDate.now(),
-                HttpStatus.BAD_REQUEST.value(),request.getDescription(false));
+                HttpStatus.BAD_REQUEST.value(),request.getDescription(false), Arrays.toString(ex.getStackTrace()));
         return new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiError> handleNoUserNotFoundException(UserNotFoundException ex, WebRequest request){
-        log.error(ex.getMessage());
+        log.error(ex.getMessage()+"\n"+ Arrays.toString(ex.getStackTrace()));
         ApiError apiError = new ApiError(ex.getMessage(), LocalDate.now(),
-                HttpStatus.BAD_REQUEST.value(),request.getDescription(false));
+                HttpStatus.BAD_REQUEST.value(),request.getDescription(false), Arrays.toString(ex.getStackTrace()));
         return new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
     }
     @ExceptionHandler(NoSuchValueException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ApiError> handleNoSuchValueException(NoSuchValueException ex,WebRequest webRequest){
-        log.warn(ex.getMessage(),ex);
+        log.error(ex.getMessage()+"\n"+ Arrays.toString(ex.getStackTrace()));
         ApiError apiError = new ApiError(
                 ex.getMessage(),
                 LocalDate.now(),
                 HttpStatus.BAD_REQUEST.value(),
-                webRequest.getDescription(false)
+                webRequest.getDescription(false),
+                Arrays.toString(ex.getStackTrace())
         );
         return ResponseEntity.badRequest().body(apiError);
     }

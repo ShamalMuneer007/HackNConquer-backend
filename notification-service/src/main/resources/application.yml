@@ -7,7 +7,7 @@ spring:
     name: notification
   data:
     redis:
-      host: 4.240.110.190
+      host: 34.93.145.38
       port: 6379
   config:
     import: optional:configserver:http://localhost:8888
@@ -23,7 +23,7 @@ spring:
             enable: true
     username: shamal20017@gmail.com
   rabbitmq:
-    host: 4.240.110.190
+    host: 34.93.145.38
     port: 5672
     username: guest
     password: guest

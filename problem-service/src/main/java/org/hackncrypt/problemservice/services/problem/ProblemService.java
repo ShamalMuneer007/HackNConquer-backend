@@ -2,6 +2,7 @@ package org.hackncrypt.problemservice.services.problem;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.hackncrypt.problemservice.model.dto.ProblemDto;
+import org.hackncrypt.problemservice.model.dto.request.ChangeProblemAcceptanceRateRequest;
 import org.hackncrypt.problemservice.model.dto.request.PatchProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.AddProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.ProblemVerificationRequest;
@@ -24,4 +25,8 @@ public interface ProblemService {
     ProblemDto getProblemById(String problemId);
 
     ProblemDto getProblemByNumber(Long problemNumber);
+
+    void changeProblemAcceptanceRate(ChangeProblemAcceptanceRateRequest changeProblemAcceptanceRateRequest);
+
+    List<ProblemDto> getAllProblemsInProblemIdList(List<String> problemIdList);
 }

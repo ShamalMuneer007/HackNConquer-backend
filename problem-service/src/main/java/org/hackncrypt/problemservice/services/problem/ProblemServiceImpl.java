@@ -8,6 +8,7 @@ import org.hackncrypt.problemservice.enums.SubmissionStatus;
 import org.hackncrypt.problemservice.exceptions.*;
 import org.hackncrypt.problemservice.exceptions.business.DuplicateValueException;
 import org.hackncrypt.problemservice.exceptions.business.NoSuchValueException;
+import org.hackncrypt.problemservice.exceptions.business.ProblemNotFoundException;
 import org.hackncrypt.problemservice.exceptions.judge0.ClientSandboxCodeExecutionError;
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxCompileError;
 import org.hackncrypt.problemservice.exceptions.judge0.SandboxError;
@@ -31,7 +32,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
@@ -40,6 +40,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
@@ -66,6 +67,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .map(test -> CompletableFuture.runAsync(() -> {
                     try {
                         JudgeSubmissionResponse submissionResponse = executeAndGetResponse(problemVerificationDto, test);
+                        log.info("SUBMISSION RESPONSE : {}",submissionResponse);
                         handleSubmissionResponse(submissionResponse, test, acceptedCases, rejectedCases, timeTaken, memoryTaken);
                     } catch (RuntimeException e) {
                         log.error(e.getMessage());
@@ -91,7 +93,7 @@ public class ProblemServiceImpl implements ProblemService {
             log.info("All test cases does not match with given expected output");
             return new ProblemVerificationResponse("Expected output does not match with test cases given",
                     SubmissionStatus.REJECTED.name(), List.copyOf(acceptedCases), List.copyOf(rejectedCases));
-        } else {
+        } else{
             log.info("Test cases Accepted!!!");
             return new ProblemVerificationResponse("Accepted",
                     SubmissionStatus.ACCEPTED.name(), List.copyOf(acceptedCases), List.copyOf(rejectedCases));
@@ -119,6 +121,7 @@ public class ProblemServiceImpl implements ProblemService {
                 .difficulty(Difficulty.valueOf(addProblemRequest.getDifficulty().toUpperCase()))
                 .description(addProblemRequest.getDescription())
                 .problemNo(generateProblemNo())
+                .level(addProblemRequest.getProblemLevel())
                 .build();
         problem = problemRepository.save(problem);
         AddTestCaseRequest addTestCaseRequest = new AddTestCaseRequest(problem.getProblemId(), addProblemRequest.getTestCases());
@@ -196,6 +199,25 @@ public class ProblemServiceImpl implements ProblemService {
         return new ProblemDto(problem);
     }
 
+    @Override
+    public void changeProblemAcceptanceRate(ChangeProblemAcceptanceRateRequest changeProblemAcceptanceRateRequest) {
+        Optional<Problem> problemOptional = problemRepository.findById(changeProblemAcceptanceRateRequest.getProblemId());
+        Supplier<? extends RuntimeException> noProblemException =
+                () -> new ProblemNotFoundException("Problem not found with ID: " + changeProblemAcceptanceRateRequest.getProblemId());
+        Problem problem = problemOptional.orElseThrow(noProblemException);
+        log.info("Acceptance Rate {} , New Acceptance Rate {}",changeProblemAcceptanceRateRequest.getAcceptanceRate(),problem.getAcceptanceRate());
+        problem.setAcceptanceRate(changeProblemAcceptanceRateRequest.getAcceptanceRate());
+        problemRepository.save(problem);
+    }
+
+    @Override
+    public List<ProblemDto> getAllProblemsInProblemIdList(List<String> problemIdList) {
+        List<Problem> problems = problemRepository.findAllInProblemId(problemIdList);
+        return problems.stream()
+                .map(ProblemDto::new)
+                .toList();
+    }
+
     // Initiates a Judge0 submission through a POST REST call at /submission, acquiring a token upon completion.
     private JudgeTokenResponse createJudge0Submission(Judge0Request judge0Request) {
         try {
@@ -226,8 +248,7 @@ public class ProblemServiceImpl implements ProblemService {
         request.setStdin(Base64.getEncoder().encodeToString(test.getTestCaseInput().getBytes()));
 
         JudgeTokenResponse submissionCreationResponse = createJudge0Submission(request);
-        JudgeSubmissionResponse submissionResponse = new JudgeSubmissionResponse();
-
+        JudgeSubmissionResponse submissionResponse;
         do {
             try {
                 submissionResponse = judgeWebClient.get()
@@ -260,7 +281,10 @@ public class ProblemServiceImpl implements ProblemService {
                                           Queue<AcceptedCase> acceptedCases,
                                           Queue<RejectedCase> rejectedCases,
                                           Queue<Double> timeTaken, Queue<Double> memoryTaken) {
-        if (submissionResponse.getCompile_output() != null) {
+        if(submissionResponse.getStatus().getId() == 13){
+            throw new SandboxError(submissionResponse.getStatus().getDescription()+":"+submissionResponse.getMessage());
+        }
+        else if (submissionResponse.getCompile_output() != null) {
             log.warn("ERROR IN SUBMITTED CODE : COMPILE_OUTPUT {}", submissionResponse.getCompile_output());
             throw new SandboxCompileError(submissionResponse.getCompile_output());
         } else if (submissionResponse.getStderr() != null) {

@@ -44,7 +44,7 @@ public class JwtService {
                     .setSubject(username)
                     .claim("role", roles.get(0))
                     .claim("userId", Long.toString(user.getUserId()))
-                    .claim("email",user.getRole())
+                    .claim("email",user.getEmail())
                     .claim("level",user.getLevel())
                     .claim("xp",user.getXp())
                     .claim("profileImage",user.getProfileImageUrl())
@@ -69,15 +69,19 @@ public class JwtService {
         log.info("Validating token ....");
             try {
                 Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
+                log.info("VALIDATED");
                 return true;
             }
             catch (ExpiredJwtException e){
+                log.error("TOKEN EXPIRED");
                 throw new ExpiredJwtException(e.getHeader(),e.getClaims(),"Jwt token is expired");
             }
-            catch (InvalidClaimException e){
+            catch (SignatureException e){
+                log.error("Invalid Token");
                 throw new JwtException("Jwt token is invalid");
             }
             catch (Exception e){
+                log.error("Something went wrong");
                 throw new RuntimeException("Something went wrong with the jwt token validation");
             }
 
@@ -98,4 +102,12 @@ public class JwtService {
             return null;
         }
 
+    public String getUserIdFromRequest(HttpServletRequest request) {
+        String token = getJWTFromRequest(request);
+        Claims claims = Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("userId",String.class);
+    }
 }

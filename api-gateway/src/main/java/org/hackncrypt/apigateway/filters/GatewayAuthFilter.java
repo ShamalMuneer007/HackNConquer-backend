@@ -60,6 +60,7 @@ public class GatewayAuthFilter extends AbstractGatewayFilterFactory<GatewayAuthF
                                 .header("token", token)
                                 .header("username", jwtUtil.getUsernameFromToken(token))
                                 .build();
+                        log.info("VALIDATED");
                     } catch (ExpiredJwtException e) {
                         log.error("Expired jwt");
                         return handleUnauthorizedResponse(exchange, "Expired JWT token");

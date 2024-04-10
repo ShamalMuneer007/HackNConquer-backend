@@ -4,13 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.submissionservice.enums.SubmissionStatus;
 import org.hackncrypt.submissionservice.exceptions.technical.SolutionSubmissionException;
+import org.hackncrypt.submissionservice.integrations.problemservice.ProblemFeignProxy;
 import org.hackncrypt.submissionservice.integrations.testservice.TestFeignProxy;
 import org.hackncrypt.submissionservice.integrations.userservice.UserFeignProxy;
 import org.hackncrypt.submissionservice.models.dto.SubmissionDto;
+import org.hackncrypt.submissionservice.models.dto.request.ChangeProblemAcceptanceRateRequest;
 import org.hackncrypt.submissionservice.models.dto.request.IncreaseXpRequest;
 import org.hackncrypt.submissionservice.models.dto.request.SubmitSolutionRequest;
 import org.hackncrypt.submissionservice.models.dto.response.RunAndTestResponse;
 import org.hackncrypt.submissionservice.models.dto.response.SubmitSolutionResponse;
+import org.hackncrypt.submissionservice.models.dto.response.UserSolvedSubmissionResponse;
 import org.hackncrypt.submissionservice.models.entities.Submission;
 import org.hackncrypt.submissionservice.repositories.SubmissionRepository;
 import org.hackncrypt.submissionservice.services.SubmissionService;
@@ -21,6 +24,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
@@ -29,6 +34,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final TestFeignProxy testFeignProxy;
     private final UserFeignProxy userFeignProxy;
+    private final ProblemFeignProxy problemFeignProxy;
     @Override
     public SubmitSolutionResponse submitSolution(SubmitSolutionRequest submitSolutionRequest, Long userId, String authHeader) {
         ResponseEntity<RunAndTestResponse> response =  testFeignProxy.runAndTestSolution(submitSolutionRequest,authHeader);
@@ -39,8 +45,9 @@ public class SubmissionServiceImpl implements SubmissionService {
         if(solutionResponse.getSubmissionStatus().equals(SubmissionStatus.ACCEPTED)){
             IncreaseXpRequest increaseXpRequest =
                     new IncreaseXpRequest(userId,submitSolutionRequest.getProblemLevel()*10);
-            userFeignProxy.increaseUserLevel(increaseXpRequest);
+            userFeignProxy.increaseUserLevel(increaseXpRequest,authHeader);
         }
+
         Submission submission = Submission
                 .builder()
                 .submissionStatus(solutionResponse.getSubmissionStatus())
@@ -55,8 +62,17 @@ public class SubmissionServiceImpl implements SubmissionService {
                 .totalTestCases(solutionResponse.getTotalTestCases())
                 .build();
         submissionRepository.save(submission);
+       List<Submission> submissions = submissionRepository.findByProblemId(submitSolutionRequest.getProblemId());
+        AtomicInteger acceptedSubmission = new AtomicInteger();
+        submissions.forEach(sub -> {
+            if (sub.getSubmissionStatus().equals(SubmissionStatus.ACCEPTED)) {
+                acceptedSubmission.getAndIncrement();
+            }
+        });
+        float acceptanceRate = (float) acceptedSubmission.get() / submissions.size() * 100;
+        acceptanceRate = Math.round(acceptanceRate * 100) / 100f;
+        problemFeignProxy.changeProblemAcceptanceRate(new ChangeProblemAcceptanceRateRequest(submitSolutionRequest.getProblemId(),acceptanceRate),authHeader);
         return new SubmitSolutionResponse(solutionResponse);
-
     }
 
     @Override
@@ -69,5 +85,24 @@ public class SubmissionServiceImpl implements SubmissionService {
             submissionDtos.add(submissionDto);
         });
         return submissionDtos;
+    }
+
+    @Override
+    public List<UserSolvedSubmissionResponse> getUserSolvedSubmissions(Long userId,String authHeader) {
+        List<Submission> solvedSubmissions = submissionRepository.findByUserIdAndSubmissionStatus(userId,SubmissionStatus.ACCEPTED);
+        List<String> solvedProblemIdList = solvedSubmissions.stream()
+                .map(Submission::getProblemId)
+                .toList();
+        List<UserSolvedSubmissionResponse> solvedProblems = problemFeignProxy.getProblemsByProblemIdList(solvedProblemIdList,authHeader);
+        return solvedProblems.stream()
+                .peek(solvedProblem -> {
+                    Optional<Submission> submission = solvedSubmissions.stream()
+                            .filter(s -> s.getProblemId().equals(solvedProblem.getProblemId()))
+                            .findFirst();
+                    submission.ifPresent(s -> {
+                        solvedProblem.setSolvedAt(s.getSubmittedAt().toLocalDate());
+                        solvedProblem.setSolutionCode(s.getSolutionCode());
+                    });
+                }).toList();
     }
 }

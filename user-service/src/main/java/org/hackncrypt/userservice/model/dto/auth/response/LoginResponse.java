@@ -1,6 +1,7 @@
 package org.hackncrypt.userservice.model.dto.auth.response;
 
 import lombok.*;
+import org.hackncrypt.userservice.model.dto.UserDto;
 
 @Getter
 @Setter
@@ -9,5 +10,6 @@ import lombok.*;
 @NoArgsConstructor
 public class LoginResponse {
     private String accessToken;
+    private UserDto userInfo;
     private String message;
 }

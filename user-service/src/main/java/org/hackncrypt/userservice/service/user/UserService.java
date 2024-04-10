@@ -1,5 +1,6 @@
 package org.hackncrypt.userservice.service.user;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.hackncrypt.userservice.model.dto.UserDto;
 import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
 import org.hackncrypt.userservice.model.dto.auth.request.LoginRequest;
@@ -12,7 +13,7 @@ public interface UserService {
 
     void sendRegistrationEmailOtp(RegisterRequest email);
 
-    boolean validateUserOtp(String email, Integer otp);
+    boolean validateUserOtp(String email, String otp);
 
     boolean existsByEmail(String email);
 
@@ -29,4 +30,6 @@ public interface UserService {
     void deleteUserByUserId(Long userId);
 
     void increaseUserXp(IncreaseXpRequest increaseXpRequest);
+
+    UserDto getUserData(HttpServletRequest request);
 }

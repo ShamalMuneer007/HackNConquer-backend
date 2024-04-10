@@ -32,6 +32,8 @@ public class Problem {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<TestCase> testCases;
+    private Float acceptanceRate;
+    private Integer level;
     private boolean isDeleted;
 }
 

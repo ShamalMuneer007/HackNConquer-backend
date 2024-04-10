@@ -5,7 +5,6 @@ import lombok.*;
 import org.hackncrypt.userservice.enums.Role;
 
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -23,8 +22,9 @@ public class User {
     private String phoneNumber;
     private String profileImageUrl;
     private String email;
-    private int level;
-    private int xp;
+    private int level = 1;
+    private int currentMaxXp = 50;
+    private int xp = 0;
     private boolean isPremium;
     private boolean isBlocked;
     private Date created_at;

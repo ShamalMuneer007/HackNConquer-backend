@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "test",path = "/test")
+@FeignClient(name = "test",path = "/test/api/v1")
 public interface TestFeignProxy {
 
-    @PostMapping("/api/v1/user/run-and-test-solution")
+    @PostMapping("/user/run-and-test-solution")
     ResponseEntity<RunAndTestResponse> runAndTestSolution(@RequestBody SubmitSolutionRequest submitSolutionRequest, @RequestHeader("Authorization") String authorizationHeader);
 }

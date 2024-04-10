@@ -12,21 +12,23 @@ public class UserDto {
     private Long userId;
     private String username;
     private String playerRank;
-    private String phoneNumber;
-    private String profileImageUrl;
+    private String profileImage;
     private String email;
     private int level;
     private int xp;
     private boolean isPremium;
+    private String role;
+    private int currentMaxXp;
     public UserDto(User user){
         this.userId = user.getUserId();
         this.email = user.getEmail();
         this.isPremium = user.isPremium();
         this.xp = user.getXp();
         this.level = user.getLevel();
-        this.phoneNumber = user.getPhoneNumber();
-        this.profileImageUrl = user.getProfileImageUrl();
+        this.profileImage = user.getProfileImageUrl();
         this.username = user.getUsername();
         this.playerRank = user.getPlayerRank();
+        this.role = user.getRole().name();
+        this.currentMaxXp = user.getCurrentMaxXp();
     }
 }

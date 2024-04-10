@@ -42,6 +42,7 @@ public class AuthController {
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
         String token = jwtService.generateToken(authToken);
+        log.info("T");
         return ResponseEntity.ok(
                 LoginResponse.builder()
                         .message("Login successful!")
@@ -70,6 +71,7 @@ public class AuthController {
                                 .build()
                 );
             }
+            log.info("USER REGISTER OTP : {}",userRegisterDto.getOtp());
             boolean otpValidated =
                     userService
                             .validateUserOtp(userRegisterDto.getEmail(),userRegisterDto.getOtp());

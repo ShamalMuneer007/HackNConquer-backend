@@ -34,10 +34,9 @@ public class OtpServiceImpl implements OtpService {
             String val = redisTemplate.opsForValue().get(otpDto.getEmail());
             log.info("Validating otp ....{}",val);
             if (val != null) {
-                int otp = Integer.parseInt(val);
-                return otp == otpDto.getOtp();
+                return val.equals(otpDto.getOtp());
             } else {
-                log.warn("Invalid otp!");
+                log.warn("Otp Expired");
                 return false;
             }
         }

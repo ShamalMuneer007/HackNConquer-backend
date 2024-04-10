@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.submissionservice.models.dto.SubmissionDto;
 import org.hackncrypt.submissionservice.models.dto.response.SubmitSolutionResponse;
 import org.hackncrypt.submissionservice.models.dto.request.SubmitSolutionRequest;
+import org.hackncrypt.submissionservice.models.dto.response.UserSolvedSubmissionResponse;
 import org.hackncrypt.submissionservice.services.SubmissionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,11 @@ public class SubmissionController {
         Long userId = Long.parseLong((String)request.getAttribute("userId"));
         log.info(String.valueOf(userId));
         return ResponseEntity.ok(submissionService.getProblemSubmission(problemId,userId));
+    }
+    @GetMapping("/get-solved-submissions")
+    public ResponseEntity<List<UserSolvedSubmissionResponse>> getAllUserSolvedSubmissions(HttpServletRequest request){
+        Long userId = Long.parseLong((String)request.getAttribute("userId"));
+        return ResponseEntity.ok(submissionService.getUserSolvedSubmissions(userId,request.getHeader("Authorization")));
     }
 
 }
