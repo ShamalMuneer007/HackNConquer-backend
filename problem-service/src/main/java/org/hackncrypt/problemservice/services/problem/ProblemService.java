@@ -16,7 +16,7 @@ public interface ProblemService {
 
     void addProblem(AddProblemRequest addProblemRequest, HttpServletRequest request);
 
-    void updateProblemDetails(long problemNo,PatchProblemRequest patchProblemRequest);
+    void updateProblemDetails(String problemId,PatchProblemRequest patchProblemRequest);
 
     Page<ProblemDto> getAllProblem(int page, int size);
 

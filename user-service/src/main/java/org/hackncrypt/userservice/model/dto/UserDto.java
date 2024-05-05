@@ -3,6 +3,8 @@ package org.hackncrypt.userservice.model.dto;
 import lombok.*;
 import org.hackncrypt.userservice.model.entities.User;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -11,7 +13,7 @@ import org.hackncrypt.userservice.model.entities.User;
 public class UserDto {
     private Long userId;
     private String username;
-    private String playerRank;
+    private Integer playerRank;
     private String profileImage;
     private String email;
     private int level;

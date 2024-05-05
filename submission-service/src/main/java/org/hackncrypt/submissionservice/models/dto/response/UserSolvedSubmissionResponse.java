@@ -21,6 +21,8 @@ public class UserSolvedSubmissionResponse {
     private Integer problemLevel;
     private List<String> categories;
     private String problemId;
+    private Double bestRuntime;
+    private Double bestMemory;
     private Long problemNo;
-
+    private Integer languageId;
 }

@@ -1,5 +1,9 @@
 package org.hackncrypt.userservice.controllers.advice;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
 import org.hackncrypt.userservice.exceptions.NoSuchValueException;
@@ -8,6 +12,7 @@ import org.hackncrypt.userservice.model.dto.response.ApiError;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -48,4 +53,5 @@ public class DomainExceptionControllerAdvice {
         );
         return ResponseEntity.badRequest().body(apiError);
     }
+
 }

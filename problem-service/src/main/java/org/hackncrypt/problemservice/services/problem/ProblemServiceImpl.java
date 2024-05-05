@@ -108,6 +108,7 @@ public class ProblemServiceImpl implements ProblemService {
             throw new DuplicateValueException("Problem with the same name already exists !!!");
         }
         log.info("Adding new problem ...");
+        log.info("Add Problem Request Object {}",addProblemRequest);
         List<Category> categories = categoryService.getAllCategoriesOfCategoryNames(addProblemRequest.getCategories());
         Problem problem = Problem.builder()
                 .problemName(addProblemRequest.getProblemName())
@@ -118,10 +119,12 @@ public class ProblemServiceImpl implements ProblemService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .isDeleted(false)
+                .examples(addProblemRequest.getExamples())
                 .difficulty(Difficulty.valueOf(addProblemRequest.getDifficulty().toUpperCase()))
                 .description(addProblemRequest.getDescription())
                 .problemNo(generateProblemNo())
                 .level(addProblemRequest.getProblemLevel())
+                .acceptanceRate(0F)
                 .build();
         problem = problemRepository.save(problem);
         AddTestCaseRequest addTestCaseRequest = new AddTestCaseRequest(problem.getProblemId(), addProblemRequest.getTestCases());
@@ -131,11 +134,14 @@ public class ProblemServiceImpl implements ProblemService {
     }
 
     @Override
-    public void updateProblemDetails(long problemNo, PatchProblemRequest patchProblemRequest) {
-        Optional<Problem> problemOptional = problemRepository.findByProblemNo(problemNo);
-        Problem problem = problemOptional.orElseThrow(() -> new NoSuchElementException("Problem not found with problem number: " + problemNo));
-        if (Objects.equals(patchProblemRequest.getProblemName(), problem.getProblemName())) {
-            problem.setProblemName(patchProblemRequest.getProblemName());
+    @Transactional
+    public void updateProblemDetails(String problemId, PatchProblemRequest patchProblemRequest) {
+        log.info("Updating problem : {}",problemId);
+        log.info("Patch request{}",patchProblemRequest);
+        Optional<Problem> problemOptional = problemRepository.findById(problemId);
+        Problem problem = problemOptional.orElseThrow(() -> new NoSuchElementException("Problem not found with problem id: " + problemId));
+        if (Objects.equals(patchProblemRequest.getName(), problem.getProblemName())) {
+            problem.setProblemName(patchProblemRequest.getName());
         }
         if (Objects.equals(patchProblemRequest.getDescription(), problem.getDescription())) {
             problem.setDescription(patchProblemRequest.getDescription());
@@ -180,6 +186,7 @@ public class ProblemServiceImpl implements ProblemService {
 
     @Override
     public void deleteProblem(String problemId) {
+        log.info("Deleting problem of problemId :{}",problemId);
         problemRepository.deleteById(problemId);
     }
 

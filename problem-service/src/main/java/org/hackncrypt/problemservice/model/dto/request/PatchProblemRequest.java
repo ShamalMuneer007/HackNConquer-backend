@@ -13,21 +13,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PatchProblemRequest {
-
     @Size(min = 5)
-    private String problemName;
-
+    private String name;
     @Size(min = 10)
     private String description;
-
     private List<String> categories;
-
     private List<TestCase> testCases;
-
     private String driverCode;
-
     private String solutionTemplate;
-
     private String difficulty;
     private Integer languageId;
 }

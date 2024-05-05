@@ -20,6 +20,7 @@ spring:
               - GET
               - POST
               - PUT
+              - PATCH
               - DELETE
             allowedHeaders:
               - '*'
@@ -52,6 +53,12 @@ spring:
           predicates:
             - Path=/clan/**
           uri: lb://clan
+          filters:
+            - GatewayAuthFilter
+        - id: DISCUSSION
+          predicates:
+            - Path=/discussion/**
+          uri: lb://discussion
           filters:
             - GatewayAuthFilter
         - id: NOTIFICATION

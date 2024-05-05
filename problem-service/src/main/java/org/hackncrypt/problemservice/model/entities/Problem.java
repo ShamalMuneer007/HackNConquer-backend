@@ -2,6 +2,7 @@ package org.hackncrypt.problemservice.model.entities;
 
 import lombok.*;
 import org.hackncrypt.problemservice.enums.Difficulty;
+import org.hackncrypt.problemservice.model.dto.ProblemExample;
 import org.hackncrypt.problemservice.model.dto.testCases.TestCase;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -31,6 +32,7 @@ public class Problem {
     private List<Category> categories;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<ProblemExample> examples;
     private List<TestCase> testCases;
     private Float acceptanceRate;
     private Integer level;

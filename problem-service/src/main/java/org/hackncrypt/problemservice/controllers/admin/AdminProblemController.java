@@ -83,17 +83,20 @@ public class AdminProblemController {
 
     @PostMapping("/add-problem")
     public ResponseEntity<ApiSuccessResponse> addProblem(@Valid @RequestBody AddProblemRequest addProblemRequest, HttpServletRequest servletRequest){
+        log.info("Adding problem");
         problemService.addProblem(addProblemRequest,servletRequest);
         return ResponseEntity.ok(new ApiSuccessResponse("Problem added successfully", HttpStatus.OK.value()));
     }
     @DeleteMapping("/delete-problem/{problemId}")
     public ResponseEntity<ApiSuccessResponse> deleteProblem(@PathVariable String problemId){
+        log.info("Inside delete problem request controller method....");
         problemService.deleteProblem(problemId);
         return ResponseEntity.ok(new ApiSuccessResponse("Problem removed successfully",HttpStatus.OK.value()));
     }
-    @PatchMapping("/edit-problem/{problemNo}")
-    public ResponseEntity<ApiSuccessResponse> patchProblem(@Valid @RequestBody PatchProblemRequest patchProblemRequest, @PathVariable long problemNo){
-        problemService.updateProblemDetails(problemNo,patchProblemRequest);
+    @PatchMapping("/edit-problem/{problemId}")
+    public ResponseEntity<ApiSuccessResponse> patchProblem(@Valid @RequestBody PatchProblemRequest patchProblemRequest, @PathVariable String problemId){
+        log.info("Inside edit problem request controller method....");
+        problemService.updateProblemDetails(problemId,patchProblemRequest);
         return ResponseEntity.ok(new ApiSuccessResponse("Problem updated successfully", HttpStatus.OK.value()));
     }
 

@@ -26,7 +26,7 @@ public class SecurityConfiguration {
                         authorize
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/v1/user/**").hasAnyRole("USER","ADMIN")
-                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/api/v1/**").permitAll()
                                 .anyRequest().authenticated());
         return httpSecurity.build();
     }

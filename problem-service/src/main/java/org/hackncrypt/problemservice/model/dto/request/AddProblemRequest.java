@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hackncrypt.problemservice.model.dto.ProblemExample;
 import org.hackncrypt.problemservice.model.dto.testCases.TestCase;
 import org.springframework.validation.annotation.Validated;
 
@@ -36,6 +37,10 @@ public class AddProblemRequest {
     @NotNull
     private String solutionTemplate;
     @NotNull
+    @Size(min = 3,max = 3)
+    private List<ProblemExample> examples;
+    @NotNull
     private String difficulty;
+    @NotNull
     private int languageId;
 }

@@ -7,6 +7,7 @@ import org.hackncrypt.submissionservice.exceptions.technical.SolutionSubmissionE
 import org.hackncrypt.submissionservice.integrations.problemservice.ProblemFeignProxy;
 import org.hackncrypt.submissionservice.integrations.testservice.TestFeignProxy;
 import org.hackncrypt.submissionservice.integrations.userservice.UserFeignProxy;
+import org.hackncrypt.submissionservice.models.dto.SolvedProblem;
 import org.hackncrypt.submissionservice.models.dto.SubmissionDto;
 import org.hackncrypt.submissionservice.models.dto.request.ChangeProblemAcceptanceRateRequest;
 import org.hackncrypt.submissionservice.models.dto.request.IncreaseXpRequest;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,10 +44,29 @@ public class SubmissionServiceImpl implements SubmissionService {
         if(response.getStatusCode() != HttpStatus.OK || solutionResponse == null){
             throw new SolutionSubmissionException("No solution Response !!!");
         }
+        List<Submission> solvedSubmissions = submissionRepository.findByUserIdAndSubmissionStatus(userId,SubmissionStatus.ACCEPTED);
+        List<Submission> problemSubmissions = solvedSubmissions.stream()
+                .filter(submission -> submission.getProblemId().equals(submitSolutionRequest.getProblemId())).toList();
+
         if(solutionResponse.getSubmissionStatus().equals(SubmissionStatus.ACCEPTED)){
-            IncreaseXpRequest increaseXpRequest =
-                    new IncreaseXpRequest(userId,submitSolutionRequest.getProblemLevel()*10);
-            userFeignProxy.increaseUserLevel(increaseXpRequest,authHeader);
+            if(problemSubmissions.isEmpty()) {
+                IncreaseXpRequest increaseXpRequest =
+                        new IncreaseXpRequest(userId, submitSolutionRequest.getProblemLevel() * 10);
+                userFeignProxy.increaseUserLevel(increaseXpRequest, authHeader);
+            }
+            else{
+                problemSubmissions.stream()
+                        .min(Comparator.comparingDouble(Submission::getAverageMemory)
+                                .thenComparingDouble(Submission::getAverageTime))
+                        .filter(s -> s.getAverageMemory() != null && s.getAverageTime() != null)
+                        .ifPresent(solvedSubmission -> {
+                            if(solutionResponse.getAverageMemory() < solvedSubmission.getAverageMemory()  ||  solutionResponse.getAverageTime() < solvedSubmission.getAverageTime() ){
+                                IncreaseXpRequest increaseXpRequest =
+                                        new IncreaseXpRequest(userId, submitSolutionRequest.getProblemLevel() * 4);
+                                userFeignProxy.increaseUserLevel(increaseXpRequest, authHeader);
+                            }
+                        });
+            }
         }
 
         Submission submission = Submission
@@ -97,12 +118,17 @@ public class SubmissionServiceImpl implements SubmissionService {
         return solvedProblems.stream()
                 .peek(solvedProblem -> {
                     Optional<Submission> submission = solvedSubmissions.stream()
-                            .filter(s -> s.getProblemId().equals(solvedProblem.getProblemId()))
-                            .findFirst();
-                    submission.ifPresent(s -> {
-                        solvedProblem.setSolvedAt(s.getSubmittedAt().toLocalDate());
-                        solvedProblem.setSolutionCode(s.getSolutionCode());
+                            .filter(solvedSubmission -> solvedSubmission.getProblemId().equals(solvedProblem.getProblemId()))
+                            .min(Comparator.comparingDouble(Submission::getAverageMemory)
+                                    .thenComparingDouble(Submission::getAverageTime))
+                            .filter(s -> s.getAverageMemory() != null && s.getAverageTime() != null);
+                    submission.ifPresent(solvedSubmission -> {
+                        solvedProblem.setSolvedAt(solvedSubmission.getSubmittedAt().toLocalDate());
+                        solvedProblem.setSolutionCode(solvedSubmission.getSolutionCode());
+                        solvedProblem.setBestMemory(solvedSubmission.getAverageMemory());
+                        solvedProblem.setBestRuntime(solvedSubmission.getAverageTime());
                     });
-                }).toList();
+                }).sorted(Comparator.comparing(UserSolvedSubmissionResponse::getSolvedAt, Comparator.reverseOrder()))
+                .toList();
     }
 }

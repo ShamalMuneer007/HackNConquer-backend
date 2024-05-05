@@ -3,19 +3,27 @@ package org.hackncrypt.userservice.service.user;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hackncrypt.userservice.controllers.user.AddFriendRequest;
+import org.hackncrypt.userservice.enums.FriendStatus;
 import org.hackncrypt.userservice.enums.Role;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
 import org.hackncrypt.userservice.exceptions.NoSuchValueException;
 import org.hackncrypt.userservice.exceptions.UserAuthenticationException;
 import org.hackncrypt.userservice.exceptions.business.UserNotFoundException;
 import org.hackncrypt.userservice.integrations.notificationservice.NotificationFeignProxy;
+import org.hackncrypt.userservice.model.dto.LeaderboardDto;
 import org.hackncrypt.userservice.model.dto.UserDto;
 import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
 import org.hackncrypt.userservice.model.dto.auth.OtpDto;
 import org.hackncrypt.userservice.model.dto.auth.request.LoginRequest;
 import org.hackncrypt.userservice.model.dto.auth.request.RegisterRequest;
-import org.hackncrypt.userservice.model.dto.request.    IncreaseXpRequest;
+import org.hackncrypt.userservice.model.dto.request.ChangeProfileImageRequest;
+import org.hackncrypt.userservice.model.dto.request.ChangeUsernameRequest;
+import org.hackncrypt.userservice.model.dto.request.IncreaseXpRequest;
+import org.hackncrypt.userservice.model.dto.request.UserDeviceTokenRequest;
+import org.hackncrypt.userservice.model.dto.response.UserDeviceTokenResponse;
 import org.hackncrypt.userservice.model.entities.User;
+
 import org.hackncrypt.userservice.repositories.UserRepository;
 import org.hackncrypt.userservice.service.jwt.JwtService;
 import org.springframework.amqp.AmqpException;
@@ -24,6 +32,7 @@ import org.hackncrypt.userservice.config.rabbitMQ.MQConfig;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,9 +44,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.function.Supplier;
 
 @Service
@@ -51,6 +59,7 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+//    private final FriendRequestRepository friendRequestRepository;
 
     @Override
     @Transactional
@@ -64,9 +73,11 @@ public class UserServiceImpl implements UserService {
                     .isBlocked(false)
                     .isPremium(false)
                     .level(1)
+                    .currentMaxXp(50)
+                    .playerRank(null)
                     .role(userRepository.count() < 1 ? Role.ROLE_ADMIN : Role.ROLE_USER)
                     .xp(0)
-                    .created_at(new Date())
+                    .created_at(LocalDateTime.now())
                     .build();
             user = userRepository.save(user);
             UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
@@ -113,8 +124,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public void registerOauthUser(String email, String name, String picture) {
         User user = User.builder()
-                .created_at(new Date())
+                .created_at(LocalDateTime.now())
                 .isPremium(false)
+                .playerRank(null)
                 .email(email)
                 .username(name.replace(" ",""))
                 .isBlocked(false)
@@ -122,6 +134,7 @@ public class UserServiceImpl implements UserService {
                 .role(Role.ROLE_USER)
                 .level(1)
                 .xp(0)
+                .currentMaxXp(50)
                 .profileImageUrl(picture).build();
         userRepository.save(user);
     }
@@ -171,6 +184,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void increaseUserXp(IncreaseXpRequest increaseXpRequest) {
         Optional<User> userOptional = userRepository.findById(increaseXpRequest.getUserId());
         Supplier<? extends RuntimeException> noUserException =
@@ -185,11 +199,15 @@ public class UserServiceImpl implements UserService {
         }
         user.setXp(newXp);
         userRepository.save(user);
+        updateUserRank(user);
     }
+
+
 
     private void levelUp(User user) {
         user.setLevel(user.getLevel() + 1);
         user.setCurrentMaxXp(user.getLevel() * 50);
+        user.setXp(0);
     }
 
     @Override
@@ -198,6 +216,102 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOptional = userRepository.findById(userId);
         User user = userOptional.orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
         return new UserDto(user);
+    }
+
+    @Override
+    public List<LeaderboardDto> fetchGlobalLeaderboardUserInfos() {
+        PageRequest pageRequest = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "level", "xp"));
+        Page<User> topUsers = userRepository.findByIsDeletedFalseOrderByLevelDescXpDesc(pageRequest);
+        return topUsers.stream().map(LeaderboardDto::new).toList();
+    }
+
+    @Override
+    public void changeUsername(ChangeUsernameRequest changeUsernameRequest, long userId) {
+
+    }
+
+    @Override
+    public void changeUserProfileImage(ChangeProfileImageRequest changeProfileImageRequest, long userId) {
+
+    }
+
+    @Override
+    @Transactional
+    public void addFriend(Long friendUserId, long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        User user = userOptional.orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        User friend = userRepository.findById(friendUserId).orElseThrow(() ->  new UserNotFoundException("No user with userId is present to add friend"+userId));
+        if (!user.getFriends().contains(friend)) {
+            user.getFriends().add(friend);
+        }
+        if (!friend.getFriends().contains(user)) {
+            friend.getFriends().add(user);
+        }
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
+
+    @Override
+    @Transactional
+    public void removeFriend(Long friendUserId, long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        User user = userOptional.orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        User friend = userRepository.findById(friendUserId).orElseThrow(() ->  new UserNotFoundException("No user with userId is present to add friend"+userId));
+        user.getFriends().remove(friend);
+        friend.getFriends().remove(user);
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
+
+    @Override
+    public List<UserDto> searchUsersContainingUsername(String username) {
+        List<User> users = userRepository.findByUsernameStartingWithAndIsBlockedFalse(username);
+        if(users == null || users.isEmpty()){
+            return null;
+        }
+        return users.stream().map(UserDto::new).toList();
+    }
+
+
+    @Override
+    public void sendFriendRequest(Long senderId, Long receiverId) {
+        User sender = userRepository.findById(senderId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User receiver = userRepository.findById(receiverId).orElseThrow(() -> new UserNotFoundException("User not found"));
+
+//        FriendRequest existingRequest = friendRequestRepository.findBySenderAndReceiverAndStatus(sender, receiver, FriendStatus.PENDING);
+//        if (existingRequest != null) {
+//            return;
+//        }
+//
+//        FriendRequest friendRequest = FriendRequest.builder()
+//                .sender(sender)
+//                .receiver(receiver)
+//                .status(FriendStatus.PENDING)
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//        friendRequestRepository.save(friendRequest);
+    }
+
+    @Override
+    @Transactional
+    public void updateUserDeviceToken(UserDeviceTokenRequest userDeviceTokenRequest) {
+        Long userId = userDeviceTokenRequest.getUserId();
+        String deviceToken = userDeviceTokenRequest.getDeviceToken();
+        User user = userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        user.setDeviceToken(deviceToken);
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserDeviceTokenResponse getUserDeviceToken(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        return new UserDeviceTokenResponse(user.getDeviceToken());
+    }
+
+    private void updateUserRank(User user) {
+        Integer playerRank = userRepository.findUserRankByUserId(user.getUserId()).orElseThrow(() ->  new UserNotFoundException("No user with userId "+user.getUserId()));
+        user.setPlayerRank(playerRank);
+        userRepository.save(user);
     }
 
     //Validate User Inputs

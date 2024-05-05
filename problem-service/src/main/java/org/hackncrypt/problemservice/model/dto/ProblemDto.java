@@ -28,7 +28,8 @@ public class ProblemDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<TestCase> testCases;
-    private float acceptanceRate;
+    private List<ProblemExample> examples;
+    private Float acceptanceRate;
     public ProblemDto(Problem problem){
         this.createdAt = problem.getCreatedAt();
         this.description = problem.getDescription();
@@ -47,5 +48,6 @@ public class ProblemDto {
         this.problemNo = problem.getProblemNo();
         this.problemLevel = problem.getLevel();
         this.acceptanceRate = problem.getAcceptanceRate();
+        this.examples = problem.getExamples();
     }
 }
