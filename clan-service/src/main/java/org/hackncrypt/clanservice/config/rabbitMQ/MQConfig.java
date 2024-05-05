@@ -1,4 +1,4 @@
-package org.hackncrypt.discussionservice.config.rabbitMQ;
+package org.hackncrypt.clanservice.config.rabbitMQ;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;

@@ -1,2 +1,5 @@
-package org.hackncrypt.clanservice.service;public interface ClanService {
+package org.hackncrypt.clanservice.service;
+
+
+public interface ClanService {
 }

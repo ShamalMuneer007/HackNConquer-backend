@@ -1,4 +1,4 @@
-package org.hackncrypt.discussionservice.filters;
+package org.hackncrypt.clanservice.filters;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
@@ -8,8 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.discussionservice.constants.Constants;
-import org.hackncrypt.discussionservice.util.JwtUtil;
+import org.hackncrypt.clanservice.constants.Constants;
+import org.hackncrypt.clanservice.util.JwtUtil;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 

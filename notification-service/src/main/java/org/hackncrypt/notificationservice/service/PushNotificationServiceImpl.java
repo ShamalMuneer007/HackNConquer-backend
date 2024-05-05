@@ -36,6 +36,9 @@ public class PushNotificationServiceImpl implements PushNotificationService{
             channel.basicAck(tag, false);
             latch.countDown();
         }
+        catch(NullPointerException e){
+            log.error("Null Pointer Exception : {}",e.getMessage());
+        }
         catch (Exception e){
             log.error("Exception occured : {}",e.getMessage());
             channel.basicNack(tag, false, true);

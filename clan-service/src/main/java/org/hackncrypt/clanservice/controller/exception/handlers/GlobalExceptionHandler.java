@@ -27,7 +27,7 @@ import java.util.*;
 
 @RestControllerAdvice
 @Slf4j
-public class GlobalExceptionControllerAdvice {
+public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {

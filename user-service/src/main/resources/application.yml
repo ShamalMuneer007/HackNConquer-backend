@@ -18,6 +18,9 @@ spring:
     hibernate:
       ddl-auto : update
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
   datasource:
     url: jdbc:mysql://localhost:3306/hacknconquer_user?autoCreate=true
     username: root

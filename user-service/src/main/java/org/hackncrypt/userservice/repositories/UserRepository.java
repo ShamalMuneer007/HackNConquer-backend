@@ -24,9 +24,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findAllByIsDeletedIsFalse(Pageable pageable);
     Page<User> findByIsDeletedFalseOrderByLevelDescXpDesc(Pageable pageable);
-    @Query("SELECT RANK() OVER (ORDER BY u.level DESC, u.xp DESC) AS rank " +
-            "FROM User u " +
-            "WHERE u.userId = :userId AND u.isDeleted = false")
+    @Query("""
+            SELECT ru.rank
+            FROM (
+                SELECT u.userId, RANK() OVER (ORDER BY u.level DESC, u.xp DESC) AS rank
+                FROM User u
+                WHERE u.isDeleted = false
+            ) ru
+            WHERE ru.userId = :userId""")
     Optional<Integer> findUserRankByUserId(@Param("userId") Long userId);
 
     List<User> findByUsernameStartingWithAndIsBlockedFalse(String username);

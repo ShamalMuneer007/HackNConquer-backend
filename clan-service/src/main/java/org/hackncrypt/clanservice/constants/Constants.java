@@ -1,4 +1,4 @@
-package org.hackncrypt.discussionservice.constants;
+package org.hackncrypt.clanservice.constants;
 
 import java.util.List;
 

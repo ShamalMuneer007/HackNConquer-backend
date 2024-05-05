@@ -1,7 +1,9 @@
-package org.hackncrypt.discussionservice.config;
+package org.hackncrypt.clanservice.config;
 
-import org.hackncrypt.discussionservice.filters.AuthFilter;
-import org.hackncrypt.discussionservice.util.JwtUtil;
+import org.hackncrypt.clanservice.filters.AuthFilter;
+import org.hackncrypt.clanservice.util.JwtUtil;
+import org.hackncrypt.clanservice.filters.AuthFilter;
+import org.hackncrypt.clanservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;

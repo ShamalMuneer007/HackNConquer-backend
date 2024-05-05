@@ -1,4 +1,4 @@
-package org.hackncrypt.discussionservice.config;
+package org.hackncrypt.clanservice.config;
 
 
 import org.springframework.beans.factory.annotation.Value;

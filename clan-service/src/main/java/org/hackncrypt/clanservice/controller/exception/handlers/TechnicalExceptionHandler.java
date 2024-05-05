@@ -1,2 +1,9 @@
-package org.hackncrypt.clanservice.controller.exception.handlers;public class TechnicalExceptionHandler {
+package org.hackncrypt.clanservice.controller.exception.handlers;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+@Slf4j
+public class TechnicalExceptionHandler {
 }

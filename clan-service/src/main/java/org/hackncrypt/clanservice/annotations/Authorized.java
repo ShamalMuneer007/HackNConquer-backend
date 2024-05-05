@@ -1,4 +1,4 @@
-package org.hackncrypt.discussionservice.annotations;
+package org.hackncrypt.clanservice.annotations;
 
 import java.lang.annotation.*;
 

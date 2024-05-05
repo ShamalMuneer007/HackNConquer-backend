@@ -1,6 +1,6 @@
-package org.hackncrypt.discussionservice.config;
+package org.hackncrypt.clanservice.config;
 
-import org.hackncrypt.discussionservice.interceptor.AuthInterceptor;
+import org.hackncrypt.clanservice.interceptor.AuthInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

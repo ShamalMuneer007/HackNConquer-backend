@@ -1,4 +1,4 @@
-package org.hackncrypt.discussionservice.util;
+package org.hackncrypt.clanservice.util;
 
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
