@@ -10,6 +10,7 @@
         <module name="submission-service" />
         <module name="config-server" />
         <module name="problem-service" />
+        <module name="payment-service" />
         <module name="discussion-service" />
         <module name="api-gateway" />
         <module name="name-server" />
@@ -36,6 +37,7 @@
       <module name="leaderboard-service" options="-parameters" />
       <module name="name-server" options="-parameters" />
       <module name="notification-service" options="-parameters" />
+      <module name="payment-service" options="-parameters" />
       <module name="problem-service" options="-parameters" />
       <module name="submission-service" options="-parameters" />
       <module name="test-service" options="-parameters" />

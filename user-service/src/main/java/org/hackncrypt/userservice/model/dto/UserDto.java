@@ -21,6 +21,7 @@ public class UserDto {
     private boolean isPremium;
     private String role;
     private int currentMaxXp;
+    private Long clanId;
     public UserDto(User user){
         this.userId = user.getUserId();
         this.email = user.getEmail();
@@ -32,5 +33,6 @@ public class UserDto {
         this.playerRank = user.getPlayerRank();
         this.role = user.getRole().name();
         this.currentMaxXp = user.getCurrentMaxXp();
+        this.clanId = user.getClan();
     }
 }

@@ -309,10 +309,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void updateUserRank(User user) {
-        Integer playerRank = userRepository.findUserRankByUserId(user.getUserId()).orElseThrow(() ->  new UserNotFoundException("No user with userId "+user.getUserId()));
-        log.info("Updated user rank : {}",playerRank);
-        user.setPlayerRank(playerRank);
-        userRepository.save(user);
+        userRepository.updateAllUsersRank();
     }
 
     //Validate User Inputs

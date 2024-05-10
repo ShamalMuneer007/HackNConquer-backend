@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hackncrypt.userservice.enums.FriendStatus;
 import org.hackncrypt.userservice.enums.Role;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -33,7 +35,12 @@ public class User {
     private int xp = 0;
     private boolean isPremium;
     private boolean isBlocked;
+    @CreationTimestamp
     private LocalDateTime created_at;
+    @UpdateTimestamp
+    private LocalDateTime updated_at;
+    @Column(name = "clan_id")
+    private Long clan;
     @Enumerated(EnumType.STRING)
     private Role role;
     @ManyToMany

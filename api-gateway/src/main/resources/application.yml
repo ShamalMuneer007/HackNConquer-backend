@@ -65,4 +65,8 @@ spring:
           predicates:
             - Path=/notification/**
           uri: lb://notification
+        - id: PAYMENT
+          predicates:
+            - Path=/payment/**
+          uri: lb://payment
 
