@@ -1,14 +1,16 @@
 package org.hackncrypt.userservice.service.user;
 
+import com.rabbitmq.client.Channel;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.userservice.controllers.user.AddFriendRequest;
+import org.hackncrypt.userservice.controllers.user.FriendStatusResponse;
 import org.hackncrypt.userservice.enums.FriendStatus;
 import org.hackncrypt.userservice.enums.Role;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
 import org.hackncrypt.userservice.exceptions.NoSuchValueException;
 import org.hackncrypt.userservice.exceptions.UserAuthenticationException;
+import org.hackncrypt.userservice.exceptions.business.FriendRequestException;
 import org.hackncrypt.userservice.exceptions.business.UserNotFoundException;
 import org.hackncrypt.userservice.integrations.notificationservice.NotificationFeignProxy;
 import org.hackncrypt.userservice.model.dto.LeaderboardDto;
@@ -21,18 +23,27 @@ import org.hackncrypt.userservice.model.dto.request.ChangeProfileImageRequest;
 import org.hackncrypt.userservice.model.dto.request.ChangeUsernameRequest;
 import org.hackncrypt.userservice.model.dto.request.IncreaseXpRequest;
 import org.hackncrypt.userservice.model.dto.request.UserDeviceTokenRequest;
+import org.hackncrypt.userservice.model.dto.response.ChangeUserPremiumStatusResponse;
+import org.hackncrypt.userservice.model.dto.response.FriendRequestsResponseDto;
 import org.hackncrypt.userservice.model.dto.response.UserDeviceTokenResponse;
+import org.hackncrypt.userservice.model.entities.Friend;
+import org.hackncrypt.userservice.model.entities.FriendRequest;
 import org.hackncrypt.userservice.model.entities.User;
 
+import org.hackncrypt.userservice.repositories.FriendRepository;
+import org.hackncrypt.userservice.repositories.FriendRequestRepository;
 import org.hackncrypt.userservice.repositories.UserRepository;
 import org.hackncrypt.userservice.service.jwt.JwtService;
 import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.hackncrypt.userservice.config.rabbitMQ.MQConfig;
+import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -44,6 +55,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Supplier;
@@ -59,7 +71,8 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-//    private final FriendRequestRepository friendRequestRepository;
+    private final FriendRequestRepository friendRequestRepository;
+    private final FriendRepository friendRepository;
 
     @Override
     @Transactional
@@ -203,7 +216,27 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
+    @RabbitListener(queues = "user_queue", ackMode = "MANUAL")
+    public   void changeUserPremiumStatus(ChangeUserPremiumStatusResponse response, Channel channel, @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+        try {
+          Optional<User> userOptional = userRepository.findById(response.getUserId());
+            Supplier<? extends RuntimeException> noUserException =
+                    () -> new UserNotFoundException("User not found with ID: " + response.getUserId());
+            log.info("Changing User premium status : {}",response);
+          User user = userOptional.orElseThrow(noUserException);
+          user.setPremium(response.getStatus());
+          userRepository.save(user);
+          channel.basicAck(tag, false);
+        }
+        catch (UserNotFoundException e){
+            log.warn("User not found ");
+            throw e;
+        }
+        catch (Exception e){
+            log.error(e.getMessage());
+            channel.basicNack(tag, false, true);
+        }
+    }
     private void levelUp(User user) {
         user.setLevel(user.getLevel() + 1);
         user.setCurrentMaxXp(user.getLevel() * 50);
@@ -234,33 +267,110 @@ public class UserServiceImpl implements UserService {
     public void changeUserProfileImage(ChangeProfileImageRequest changeProfileImageRequest, long userId) {
 
     }
+    @Override
+    public UserDeviceTokenResponse getUserDeviceToken(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        return new UserDeviceTokenResponse(user.getDeviceToken());
+    }
+
+    @Override
+    public List<FriendRequestsResponseDto> getAllPendingFriendRequests(long userId) {
+        userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        List<FriendRequest> friendRequestList = friendRequestRepository.findByReceiverUserId(userId);
+        return friendRequestList.stream().map(FriendRequestsResponseDto::new).toList();
+    }
 
     @Override
     @Transactional
-    public void addFriend(Long friendUserId, long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        User user = userOptional.orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
-        User friend = userRepository.findById(friendUserId).orElseThrow(() ->  new UserNotFoundException("No user with userId is present to add friend"+userId));
-        if (!user.getFriends().contains(friend)) {
-            user.getFriends().add(friend);
+    public void acceptFriendRequest(Long senderId, long userId) {
+        User friend1 = userRepository.findById(senderId).orElseThrow(() ->  new UserNotFoundException("No Sender user with userId "+userId));
+        User friend2 = userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        FriendRequest friendRequest = friendRequestRepository.findBySenderUserIdAndReceiverUserId(senderId, userId);
+        if(Objects.isNull(friendRequest)){
+            throw new FriendRequestException("Friend request does not exists");
         }
-        if (!friend.getFriends().contains(user)) {
-            friend.getFriends().add(user);
+        Friend friend = Friend.builder()
+                .friend1(friend1).friend2(friend2)
+                .build();
+        friendRepository.save(friend);
+        friendRequestRepository.delete(friendRequest);
+    }
+    @Override
+    @Transactional
+    public void rejectFriendRequest(Long senderId, long userId) {
+        userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        userRepository.findById(senderId).orElseThrow(() ->  new UserNotFoundException("No Sender user with userId "+userId));
+        FriendRequest friendRequest = friendRequestRepository.findBySenderUserIdAndReceiverUserId(senderId, userId);
+        if(friendRequest == null)
+            throw new FriendRequestException("No friend requests are present !!!");
+        friendRequestRepository.delete(friendRequest);
+    }
+
+    @Override
+    public List<UserDto> getAllFriends(long userId) {
+        userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
+        List<User> friends = friendRepository.findFriendsByUserId(userId);
+        return friends.stream().map(UserDto::new).toList();
+    }
+
+    @Override
+    public FriendStatusResponse checkFriendStatus(long currentUserId, long userId) {
+        if(!userRepository.existsById(currentUserId)){
+            throw new InvalidInputException("User with "+currentUserId+" Does not exists !!");
         }
-        userRepository.save(user);
-        userRepository.save(friend);
+        if(!userRepository.existsById(userId)){
+            throw new InvalidInputException("User with "+userId+" Does not exists !!");
+        }
+        if(currentUserId == userId){
+            throw new FriendRequestException("Both users are same !!!");
+        }
+        if(friendRepository.areFriends(currentUserId,userId)){
+            return new FriendStatusResponse("FRIENDS");
+        }
+        List<FriendRequest> existingRequest = friendRequestRepository.findFriendRequests(currentUserId,userId);
+        if(existingRequest==null || existingRequest.isEmpty()){
+            return new FriendStatusResponse("NOT_FRIENDS");
+        }
+        if(existingRequest.get(0).getSender().getUserId() == currentUserId)
+                return new FriendStatusResponse("PENDING_REQUEST");
+        else{
+                return new FriendStatusResponse("PENDING");
+        }
     }
 
     @Override
     @Transactional
     public void removeFriend(Long friendUserId, long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        User user = userOptional.orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
-        User friend = userRepository.findById(friendUserId).orElseThrow(() ->  new UserNotFoundException("No user with userId is present to add friend"+userId));
-        user.getFriends().remove(friend);
-        friend.getFriends().remove(user);
-        userRepository.save(user);
-        userRepository.save(friend);
+        if(friendUserId == userId){
+            throw new InvalidInputException("Both users are same !!!");
+        }
+        Friend friend = friendRepository.findFriendship(friendUserId,userId);
+        if(friend == null){
+            throw new FriendRequestException("Users are not friends");
+        }
+        friendRepository.delete(friend);
+    }
+    @Override
+    @Transactional
+    public void sendFriendRequest(Long senderId, Long receiverId) {
+        if(senderId.equals(receiverId)){
+            throw new InvalidInputException("Both sender Id and receiver Id are same");
+        }
+        User sender = userRepository.findById(senderId).orElseThrow(() -> new UserNotFoundException("Sender User not found"));
+        User receiver = userRepository.findById(receiverId).orElseThrow(() -> new UserNotFoundException("Receiver User not found"));
+
+        if(friendRepository.areFriends(senderId,receiverId)){
+            throw new FriendRequestException("Users are already friends");
+        }
+        FriendRequest existingRequest = friendRequestRepository.findBySenderUserIdAndReceiverUserId(senderId, receiverId);
+        if (existingRequest != null) {
+                throw new FriendRequestException("Friend request is already pending !!!");
+        }
+        FriendRequest friendRequest = FriendRequest.builder()
+                .sender(sender)
+                .receiver(receiver)
+                .build();
+        friendRequestRepository.save(friendRequest);
     }
 
     @Override
@@ -273,24 +383,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    @Override
-    public void sendFriendRequest(Long senderId, Long receiverId) {
-        User sender = userRepository.findById(senderId).orElseThrow(() -> new UserNotFoundException("User not found"));
-        User receiver = userRepository.findById(receiverId).orElseThrow(() -> new UserNotFoundException("User not found"));
 
-//        FriendRequest existingRequest = friendRequestRepository.findBySenderAndReceiverAndStatus(sender, receiver, FriendStatus.PENDING);
-//        if (existingRequest != null) {
-//            return;
-//        }
-//
-//        FriendRequest friendRequest = FriendRequest.builder()
-//                .sender(sender)
-//                .receiver(receiver)
-//                .status(FriendStatus.PENDING)
-//                .createdAt(LocalDateTime.now())
-//                .build();
-//        friendRequestRepository.save(friendRequest);
-    }
 
     @Override
     @Transactional
@@ -302,11 +395,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    @Override
-    public UserDeviceTokenResponse getUserDeviceToken(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId "+userId));
-        return new UserDeviceTokenResponse(user.getDeviceToken());
-    }
+
 
     private void updateUserRank(User user) {
         userRepository.updateAllUsersRank();

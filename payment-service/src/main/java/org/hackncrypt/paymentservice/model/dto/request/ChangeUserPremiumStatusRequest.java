@@ -1,4 +1,4 @@
-package org.hackncrypt.paymentservice.model.dto.response;
+package org.hackncrypt.paymentservice.model.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateSubscriptionResponse {
-    private String redirectUrl;
+public class ChangeUserPremiumStatusRequest {
+    private Long userId;
+    private Boolean status;
 }

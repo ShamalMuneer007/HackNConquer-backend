@@ -9,9 +9,10 @@ import lombok.*;
 @Builder
 @ToString
 public class CreateSubscriptionRequest {
-    private String name;
+    private String priceId;
+    private String customerId;
     private Long userId;
     private String email;
-    private String paymentMethod;
-    private String priceId;
+    private String name;
+    private String paymentMethodId;
 }

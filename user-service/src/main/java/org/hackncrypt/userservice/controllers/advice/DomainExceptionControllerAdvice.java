@@ -7,6 +7,7 @@ import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
 import org.hackncrypt.userservice.exceptions.NoSuchValueException;
+import org.hackncrypt.userservice.exceptions.business.FriendRequestException;
 import org.hackncrypt.userservice.exceptions.business.UserNotFoundException;
 import org.hackncrypt.userservice.model.dto.response.ApiError;
 import org.springframework.core.Ordered;
@@ -35,6 +36,13 @@ public class DomainExceptionControllerAdvice {
     }
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiError> handleNoUserNotFoundException(UserNotFoundException ex, WebRequest request){
+        log.error(ex.getMessage()+"\n"+ Arrays.toString(ex.getStackTrace()));
+        ApiError apiError = new ApiError(ex.getMessage(), LocalDate.now(),
+                HttpStatus.BAD_REQUEST.value(),request.getDescription(false), Arrays.toString(ex.getStackTrace()));
+        return new ResponseEntity<>(apiError,HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(FriendRequestException.class)
+    public ResponseEntity<ApiError> handleNoUserNotFoundException(FriendRequestException ex, WebRequest request){
         log.error(ex.getMessage()+"\n"+ Arrays.toString(ex.getStackTrace()));
         ApiError apiError = new ApiError(ex.getMessage(), LocalDate.now(),
                 HttpStatus.BAD_REQUEST.value(),request.getDescription(false), Arrays.toString(ex.getStackTrace()));

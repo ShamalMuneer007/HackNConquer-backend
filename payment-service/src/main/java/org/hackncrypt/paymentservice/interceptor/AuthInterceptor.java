@@ -17,10 +17,8 @@ public class AuthInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         if (handler instanceof HandlerMethod handlerMethod) {
-
             Class<?> handlerClass = handlerMethod.getBeanType();
-            log.info(handlerClass.getName());//Returns type of the handlerMethod
-
+            log.info("REQUEST TO CLASS : {}",handlerClass.getName());//Returns type of the handlerMethod
             //Checks if the class is annotated with @Authorized
             if (handlerClass.isAnnotationPresent(Authorized.class)) {
                 log.info("Validating Authorization");

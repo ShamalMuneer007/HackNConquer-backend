@@ -19,6 +19,8 @@ public class Clan {
     private Long clanId;
     private String clanName;
     private Integer clanRank;
+    private Integer clanLevel;
+    private Long clanXp;
     @Column(name = "badge_image_url")
     private String clanBadgeImageUrl;
     private boolean isDeleted;

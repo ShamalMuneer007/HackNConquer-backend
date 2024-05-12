@@ -43,12 +43,5 @@ public class User {
     private Long clan;
     @Enumerated(EnumType.STRING)
     private Role role;
-    @ManyToMany
-    @JoinTable(
-            name = "user_friends",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "friend_id")
-    )
-    private List<User> friends;
     private boolean isDeleted;
 }

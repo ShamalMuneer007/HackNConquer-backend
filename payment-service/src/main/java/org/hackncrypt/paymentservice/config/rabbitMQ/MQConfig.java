@@ -11,25 +11,25 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MQConfig {
 
-    public static final String WEB_FCM_QUEUE = "web_fmc_queue";
-    public static final String WEB_FMC_EXCHANGE = "web_fmc_exchange";
-    public static final String WEB_FMC_ROUTING_KEY = "web_fmc_routingKey";
+    public static final String USER_QUEUE = "user_queue";
+    public static final String USER_EXCHANGE = "user_exchange";
+    public static final String USER_ROUTING_KEY = "user_routingKey";
 
 
     @Bean
     public Queue queue(){
-        return new Queue(WEB_FCM_QUEUE);
+        return new Queue(USER_QUEUE);
     }
     @Bean
     public TopicExchange exchange(){
-        return new TopicExchange(WEB_FMC_EXCHANGE);
+        return new TopicExchange(USER_EXCHANGE);
     }
     @Bean
     public Binding binding(Queue queue, TopicExchange exchange){
         return BindingBuilder
                 .bind(queue)
                 .to(exchange)
-                .with(WEB_FMC_ROUTING_KEY);
+                .with(USER_ROUTING_KEY);
     }
     @Bean
     public MessageConverter messageConverter(){

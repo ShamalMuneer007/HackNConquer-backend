@@ -78,7 +78,6 @@ public class AuthFilter extends OncePerRequestFilter {
         log.info("REQUEST URI WITHOUT CONTEXT PATH : {}",pathWithoutContextPath);
         return Constants.getProtectedURIPatterns().stream()
                 .anyMatch(pattern ->{
-                    log.info(pattern+" REQUEST : "+pathWithoutContextPath);
                     return antPathMatcher.match(pattern, pathWithoutContextPath);
                 });
     }

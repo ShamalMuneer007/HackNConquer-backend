@@ -1,14 +1,14 @@
-package org.hackncrypt.paymentservice.model.dto.response;
+package org.hackncrypt.userservice.controllers.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateSubscriptionResponse {
-    private String redirectUrl;
+@Getter
+@Setter
+public class FriendStatusResponse {
+    private String status;
 }

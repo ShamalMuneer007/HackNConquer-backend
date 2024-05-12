@@ -5,10 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@AllArgsConstructor
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class CreateSubscriptionResponse {
-    private String redirectUrl;
+public class CreateCustomerResponse {
+    private String clientSecret;
+    private String customerId;
 }
