@@ -1,5 +1,5 @@
 server:
-  port: 8900
+  port: 9600
   servlet:
     context-path: "/clan"
 eureka:
@@ -29,3 +29,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   config:
     import: optional:configserver:http://localhost:8888
+aws:
+  access:
+    key: AKIA5JPIHCOQZWFLMC5K
+  s3:
+    bucket: hacknconquer
+  secret:
+    key: MXlbs+3+EQFIrsi/vleMZ1svyTdxw80PKfB3hYN2

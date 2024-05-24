@@ -4,8 +4,9 @@ import com.rabbitmq.client.Channel;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hackncrypt.userservice.controllers.user.FriendStatusResponse;
-import org.hackncrypt.userservice.enums.FriendStatus;
+import org.hackncrypt.userservice.exceptions.business.UserClanException;
+import org.hackncrypt.userservice.model.dto.request.*;
+import org.hackncrypt.userservice.model.dto.response.*;
 import org.hackncrypt.userservice.enums.Role;
 import org.hackncrypt.userservice.exceptions.InvalidInputException;
 import org.hackncrypt.userservice.exceptions.NoSuchValueException;
@@ -19,13 +20,6 @@ import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
 import org.hackncrypt.userservice.model.dto.auth.OtpDto;
 import org.hackncrypt.userservice.model.dto.auth.request.LoginRequest;
 import org.hackncrypt.userservice.model.dto.auth.request.RegisterRequest;
-import org.hackncrypt.userservice.model.dto.request.ChangeProfileImageRequest;
-import org.hackncrypt.userservice.model.dto.request.ChangeUsernameRequest;
-import org.hackncrypt.userservice.model.dto.request.IncreaseXpRequest;
-import org.hackncrypt.userservice.model.dto.request.UserDeviceTokenRequest;
-import org.hackncrypt.userservice.model.dto.response.ChangeUserPremiumStatusResponse;
-import org.hackncrypt.userservice.model.dto.response.FriendRequestsResponseDto;
-import org.hackncrypt.userservice.model.dto.response.UserDeviceTokenResponse;
 import org.hackncrypt.userservice.model.entities.Friend;
 import org.hackncrypt.userservice.model.entities.FriendRequest;
 import org.hackncrypt.userservice.model.entities.User;
@@ -33,6 +27,7 @@ import org.hackncrypt.userservice.model.entities.User;
 import org.hackncrypt.userservice.repositories.FriendRepository;
 import org.hackncrypt.userservice.repositories.FriendRequestRepository;
 import org.hackncrypt.userservice.repositories.UserRepository;
+import org.hackncrypt.userservice.service.UserAuditService;
 import org.hackncrypt.userservice.service.jwt.JwtService;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -73,10 +68,11 @@ public class UserServiceImpl implements UserService {
     private final UserDetailsService userDetailsService;
     private final FriendRequestRepository friendRequestRepository;
     private final FriendRepository friendRepository;
+    private final UserAuditService userAuditService;
 
     @Override
     @Transactional
-    public String registerUser(RegisterRequest userRegisterDto) {
+    public String registerUser(RegisterRequest userRegisterDto, HttpServletRequest request) {
 
             validateUserRegisterDto(userRegisterDto);
             User user = User.builder()
@@ -97,6 +93,7 @@ public class UserServiceImpl implements UserService {
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             String token = jwtService.generateToken(authToken);
             SecurityContextHolder.getContext().setAuthentication(authToken);
+            userAuditService.logUserLogin(user,request);
             return token;
     }
 
@@ -135,7 +132,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void registerOauthUser(String email, String name, String picture) {
+    public User registerOauthUser(String email, String name, String picture) {
         User user = User.builder()
                 .created_at(LocalDateTime.now())
                 .isPremium(false)
@@ -149,7 +146,7 @@ public class UserServiceImpl implements UserService {
                 .xp(0)
                 .currentMaxXp(50)
                 .profileImageUrl(picture).build();
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     @Override
@@ -159,18 +156,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String getUsernameFromUserEmail(String email) {
-        return userRepository.findByEmail(email).getUsername();
+    public User getUsernameFromUserEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     @Override
-    public String authenticateUser(LoginRequest LoginRequest) {
+    public String authenticateUser(LoginRequest LoginRequest, HttpServletRequest request) {
         String username = LoginRequest.getUsername();
         String password = LoginRequest.getPassword();
         try {
            Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
-           return jwtService.generateToken(authentication);
+           String token = jwtService.generateToken(authentication);
+            User user = userRepository.findByUsername(username);
+            userAuditService.logUserLogin(user,request);
+            return token;
         }
         catch (AuthenticationException e){
             log.error(e.getMessage());
@@ -213,6 +213,9 @@ public class UserServiceImpl implements UserService {
         user.setXp(newXp);
         userRepository.save(user);
         updateUserRank(user);
+        if(user.getClan() != null)
+            rabbitTemplate.convertAndSend(MQConfig.CLAN_LEVEL_EXCHANGE,
+                MQConfig.CLAN_LEVEL_ROUTING_KEY,new UserLevelChange(increaseXpRequest.getXp(),user.getClan()));
     }
 
 
@@ -256,6 +259,22 @@ public class UserServiceImpl implements UserService {
         PageRequest pageRequest = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "level", "xp"));
         Page<User> topUsers = userRepository.findByIsDeletedFalseOrderByLevelDescXpDesc(pageRequest);
         return topUsers.stream().map(LeaderboardDto::new).toList();
+    }
+    @Override
+    public List<LeaderboardDto> fetchFriendLeaderboardUserInfos(Long userId){
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with userId ("+userId+") is not present !!!"));
+        List<User> friends = friendRepository.findFriendsByUserId(userId);
+        friends.add(user);
+        return friends.stream()
+                .map(LeaderboardDto::new)
+                .sorted((a, b) -> {
+                    if (b.getLevel() == a.getLevel()) {
+                        return Integer.compare(b.getXp(), a.getXp());
+                    } else {
+                        return Integer.compare(b.getLevel(), a.getLevel());
+                    }
+                })
+                .toList();
     }
 
     @Override
@@ -336,6 +355,56 @@ public class UserServiceImpl implements UserService {
         else{
                 return new FriendStatusResponse("PENDING");
         }
+    }
+
+    @Override
+    public AddUserClanResponse addClan(Long userId, Long clanId) {
+        User user = userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId : "+userId));
+        if(user.getClan() != null){
+            throw new UserClanException("user is already present in a clan , clanId : "+user.getClan());
+        }
+        user.setClan(clanId);
+        userRepository.save(user);
+        return new AddUserClanResponse(user.getXp() + user.getLevel()*50L);
+    }
+
+    @Override
+    public AddUserClanResponse removeClan(Long userId, Long clanId) {
+        User user = userRepository.findById(userId).orElseThrow(() ->  new UserNotFoundException("No user with userId : "+userId));
+        if(user.getClan() == null){
+            throw new UserClanException("user is not present in the clan");
+        }
+        user.setClan(null);
+        userRepository.save(user);
+        return new AddUserClanResponse(user.getXp() + user.getLevel()*50L);
+    }
+
+    @Override
+    public List<UserDto> getUsersSortedForClanLeaderboard(List<Long> userIds) {
+        return userRepository.findAllById(userIds).stream().map(UserDto::new).sorted((a, b) -> {
+                    if (b.getLevel() == a.getLevel()) {
+                        return Integer.compare(b.getXp(), a.getXp());
+                    } else {
+                        return Integer.compare(b.getLevel(), a.getLevel());
+                    }
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void removeClanFromUsers(Long clanId) {
+        List<User> users = userRepository.findAllByClan(clanId);
+        users.forEach(user -> {
+            user.setClan(null);
+        });
+        userRepository.saveAll(users);
+    }
+
+    @Override
+    public UserCountResponse getUsersCount() {
+        Long userCount = userRepository.count();
+        return new UserCountResponse(userCount);
     }
 
     @Override

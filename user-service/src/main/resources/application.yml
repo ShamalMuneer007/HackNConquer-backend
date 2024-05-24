@@ -9,6 +9,8 @@ eureka:
 spring:
   application:
     name: users
+  zipkin:
+    base-url: http://34.93.145.38:9411
   rabbitmq:
     host: 34.93.145.38
     port: 5672

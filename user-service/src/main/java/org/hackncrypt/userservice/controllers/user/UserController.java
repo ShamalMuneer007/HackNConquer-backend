@@ -3,10 +3,13 @@ package org.hackncrypt.userservice.controllers.user;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hackncrypt.userservice.model.dto.LeaderboardDto;
 import org.hackncrypt.userservice.model.dto.request.*;
 import org.hackncrypt.userservice.model.dto.UserDto;
+import org.hackncrypt.userservice.model.dto.response.AddUserClanResponse;
 import org.hackncrypt.userservice.model.dto.response.ApiSuccessResponse;
 import org.hackncrypt.userservice.model.dto.response.FriendRequestsResponseDto;
+import org.hackncrypt.userservice.model.dto.response.FriendStatusResponse;
 import org.hackncrypt.userservice.service.user.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @PreAuthorize("hasRole('USER')")
@@ -23,6 +27,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+
+    @GetMapping("/get-friends-leaderboard")
+    public ResponseEntity<List<LeaderboardDto>> getGlobalLeaderboard(HttpServletRequest request){
+        long userId = Long.parseLong((String)request.getAttribute("userId"));
+        return ResponseEntity.ok(userService.fetchFriendLeaderboardUserInfos(userId));
+    }
     @PostMapping("/increase-xp")
     public ResponseEntity<ApiSuccessResponse> increaseUserLevel(@RequestBody IncreaseXpRequest increaseXpRequest, HttpServletRequest request){
         String requestURI = request.getRequestURI();
@@ -63,7 +73,7 @@ public class UserController {
         return ResponseEntity.ok(new ApiSuccessResponse("Friend request send successfully", HttpStatus.OK.value(), LocalDate.now(),requestURI));
     }
     @GetMapping("/friends/get-status/{userId}")
-    public ResponseEntity<FriendStatusResponse> checkFriendStatus(@PathVariable Long userId,HttpServletRequest request){
+    public ResponseEntity<FriendStatusResponse> checkFriendStatus(@PathVariable Long userId, HttpServletRequest request){
         long currentUserId = Long.parseLong((String)request.getAttribute("userId"));
         return ResponseEntity.ok(userService.checkFriendStatus(currentUserId,userId));
     }
@@ -72,7 +82,7 @@ public class UserController {
         long userId = Long.parseLong((String)request.getAttribute("userId"));
         return ResponseEntity.ok(userService.getAllPendingFriendRequests(userId));
     }
-    @PutMapping("friends/accept-request/{senderId}")
+    @PostMapping("friends/accept-request/{senderId}")
     public ResponseEntity<ApiSuccessResponse> acceptFriendRequest(HttpServletRequest request, @PathVariable Long senderId){
         String requestURI = request.getRequestURI();
         long userId = Long.parseLong((String)request.getAttribute("userId"));
@@ -93,7 +103,24 @@ public class UserController {
         userService.removeFriend(friendId,userId);
         return ResponseEntity.ok(new ApiSuccessResponse("Friend removed successfully", HttpStatus.OK.value(), LocalDate.now(),requestURI));
     }
-
+    @PutMapping("add-clan/{userId}/{clanId}")
+    public ResponseEntity<AddUserClanResponse> addUserClan(@PathVariable("userId") Long userId,@PathVariable("clanId") Long clanId,HttpServletRequest request){
+        String requestURI = request.getRequestURI();
+        AddUserClanResponse response = userService.addClan(userId,clanId);
+        return ResponseEntity.ok(response);
+    }
+    @PutMapping("/remove-clan/{userId}/{clanId}")
+    public ResponseEntity<AddUserClanResponse> removeUserClan(@PathVariable("userId") Long userId,@PathVariable("clanId") Long clanId,HttpServletRequest request){
+        String requestURI = request.getRequestURI();
+        AddUserClanResponse addUserClanResponse = userService.removeClan(userId,clanId);
+        return ResponseEntity.ok(addUserClanResponse);
+    }
+    @PutMapping("/clan-disband/{clanId}")
+    ResponseEntity<ApiSuccessResponse> removeClanFromUsers(@PathVariable Long clanId,HttpServletRequest request){
+        String requestURI = request.getRequestURI();
+        userService.removeClanFromUsers(clanId);
+        return ResponseEntity.ok(new ApiSuccessResponse("Removed clan from users !!!", HttpStatus.OK.value(), LocalDate.now(),requestURI));
+    }
 
     @GetMapping("/fetch-userdata")
     public ResponseEntity<UserDto> fetchAuthenticatedUserData(HttpServletRequest request){

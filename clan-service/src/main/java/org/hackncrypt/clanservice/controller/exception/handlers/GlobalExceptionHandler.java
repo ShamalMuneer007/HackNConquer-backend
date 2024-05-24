@@ -79,6 +79,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(FeignException.class)
     @Order(Ordered.HIGHEST_PRECEDENCE)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ApiError> handleFeignException(FeignException ex, WebRequest webRequest) {
         try{
             ObjectMapper objectMapper = JsonMapper.builder()
@@ -93,7 +94,7 @@ public class GlobalExceptionHandler {
             ApiError fallbackError = new ApiError("Error deserializing Feign exception",
                     LocalDate.now(), ex.status(),
                     webRequest.getDescription(false));
-            return ResponseEntity.status(HttpStatusCode.valueOf(ex.status()))
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .body(fallbackError);
         }
     }
@@ -116,6 +117,19 @@ public class GlobalExceptionHandler {
         log.error("Query timeout: {}", ex.getMessage());
         ApiError apiError = new ApiError(
                 "Query timeout: \n"+ex.getMessage(),
+                LocalDate.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                webRequest.getDescription(false)
+        );
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    @ExceptionHandler(NullPointerException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public ResponseEntity<ApiError> nullPointerExceptionHandler(NullPointerException ex, WebRequest webRequest){
+        log.error("NullPointer exception occurred: {}", ex.getMessage());
+        ApiError apiError = new ApiError(
+                ex.getMessage(),
                 LocalDate.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 webRequest.getDescription(false)

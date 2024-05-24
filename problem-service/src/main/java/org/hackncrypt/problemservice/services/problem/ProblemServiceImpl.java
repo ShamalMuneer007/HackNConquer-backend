@@ -16,6 +16,7 @@ import org.hackncrypt.problemservice.exceptions.judge0.SandboxStandardError;
 import org.hackncrypt.problemservice.integrations.testservice.TestFeignProxy;
 import org.hackncrypt.problemservice.model.dto.ProblemDto;
 import org.hackncrypt.problemservice.model.dto.request.*;
+import org.hackncrypt.problemservice.model.dto.response.GetProblemCountResponse;
 import org.hackncrypt.problemservice.model.dto.response.JudgeSubmissionResponse;
 import org.hackncrypt.problemservice.model.dto.response.JudgeTokenResponse;
 import org.hackncrypt.problemservice.model.dto.response.ProblemVerificationResponse;
@@ -223,6 +224,12 @@ public class ProblemServiceImpl implements ProblemService {
         return problems.stream()
                 .map(ProblemDto::new)
                 .toList();
+    }
+
+    @Override
+    public GetProblemCountResponse getProblemCount() {
+        long count  = problemRepository.count();
+        return new GetProblemCountResponse(count);
     }
 
     // Initiates a Judge0 submission through a POST REST call at /submission, acquiring a token upon completion.

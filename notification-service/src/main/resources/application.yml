@@ -9,6 +9,18 @@ spring:
     redis:
       host: 34.93.145.38
       port: 6379
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/hacknconquer_notification?autoCreate=true
+    username: root
+    password: PasswordChanged@7
+    driver-class-name: com.mysql.cj.jdbc.Driver
   config:
     import: optional:configserver:http://localhost:8888
   mail:
@@ -31,4 +43,6 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+
+
 firebase-configuration-file: hacknconquer-firebase-adminsdk-1ss7c-696b42640f.json

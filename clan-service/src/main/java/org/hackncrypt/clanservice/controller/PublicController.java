@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.clanservice.model.dto.ClanDto;
 import org.hackncrypt.clanservice.service.ClanService;
+import org.hackncrypt.clanservice.service.impl.LeaderboardDto;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,8 +16,16 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class PublicController {
     private final ClanService clanService;
+    @GetMapping("/get-info/{clanId}")
+    public ResponseEntity<ClanDto> getClanInfo(@PathVariable Long clanId) {
+        return ResponseEntity.ok(clanService.getClanInfo(clanId));
+    }
+    @GetMapping("/get-clan-leaderboard")
+    public ResponseEntity<List<LeaderboardDto>> getClanLeaderboard(){
+        return ResponseEntity.ok(clanService.fetchGlobalClanLeaderboardInfos());
+    }
     @GetMapping("/search")
     public ResponseEntity<List<ClanDto>> searchUsersLikeUsername(@RequestParam("name") String name){
-        return ResponseEntity.ok(clanService.searchUsersContainingClanName(name));
+        return ResponseEntity.ok(clanService.searchClansContainingClanName(name));
     }
 }

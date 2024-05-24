@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.problemservice.model.dto.ProblemDto;
 import org.hackncrypt.problemservice.model.dto.response.GetAllProblemResponse;
+import org.hackncrypt.problemservice.model.dto.response.GetProblemCountResponse;
 import org.hackncrypt.problemservice.services.problem.ProblemService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,10 @@ public class ProblemController {
         Page<ProblemDto> problems = problemService.getAllProblem(Integer.parseInt(page), Integer.parseInt(size));
 
         return ResponseEntity.ok(new GetAllProblemResponse(problems, HttpStatus.OK.value()));
+    }
+    @GetMapping("/count/problem")
+    public ResponseEntity<GetProblemCountResponse> getProblemCount(){
+        return ResponseEntity.ok(problemService.getProblemCount());
     }
     @GetMapping("/get-problem/{problemId}")
     public ResponseEntity<ProblemDto> getProblemByName(@PathVariable String problemId){

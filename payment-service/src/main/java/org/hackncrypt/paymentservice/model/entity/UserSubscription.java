@@ -23,10 +23,12 @@ public class UserSubscription {
     private String subscriptionId;
     private Long userId;
     private String customerId;
+    private String currency;
     @CreationTimestamp
     private LocalDateTime subscribedAt;
     @UpdateTimestamp
     private LocalDateTime subscriptionUpdatedAt;
+    private Float amount;
     private LocalDateTime subscriptionCancelledAt;
     private boolean subscriptionCancelled;
 }

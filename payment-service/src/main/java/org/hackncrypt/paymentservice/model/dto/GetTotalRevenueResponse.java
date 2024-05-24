@@ -1,4 +1,4 @@
-package org.hackncrypt.userservice.controllers.user;
+package org.hackncrypt.paymentservice.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddFriendRequest {
-    private Long FriendUserId;
+public class GetTotalRevenueResponse {
+    private Double totalRevenue;
 }

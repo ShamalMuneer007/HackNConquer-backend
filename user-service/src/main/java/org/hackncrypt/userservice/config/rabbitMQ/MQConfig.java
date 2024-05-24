@@ -18,6 +18,12 @@ public class MQConfig {
     public static final String OTP_RPC_QUEUE = "otpRpc_queue";
     public static final String OTP_RPC_EXCHANGE = "otpRpc_exchange";
     public static final String OTP_RPC_ROUTINGKEY = "otpRpc_routingKey";
+    public static final String INACTIVE_EMAIL_QUEUE = "inactive_email_queue";
+    public static final String INACTIVE_EMAIL_EXCHANGE = "inactive_email_exchange";
+    public static final String INACTIVE_EMAIL_ROUTINGKEY = "inactive_email_routingkey";
+    public static final String CLAN_LEVEL_QUEUE = "clan_level_queue";
+    public static final String CLAN_LEVEL_EXCHANGE = "clan_level_exchange";
+    public static final String CLAN_LEVEL_ROUTING_KEY = "clan_level_routing_key";
 
     @Bean
     public Queue queue(){
@@ -35,6 +41,21 @@ public class MQConfig {
                 .with(ROUTING_KEY);
     }
     @Bean
+    public Queue clanLevelQueue(){
+        return new Queue(CLAN_LEVEL_QUEUE);
+    }
+    @Bean
+    public TopicExchange clanLevelExchange(){
+        return new TopicExchange(CLAN_LEVEL_EXCHANGE);
+    }
+    @Bean
+    public Binding clanLevelBinding(Queue clanLevelQueue, TopicExchange clanLevelExchange){
+        return BindingBuilder
+                .bind(clanLevelQueue)
+                .to(clanLevelExchange)
+                .with(CLAN_LEVEL_ROUTING_KEY);
+    }
+    @Bean
     public Queue otpRpc(){
         return new Queue(OTP_RPC_QUEUE);
     }
@@ -48,6 +69,21 @@ public class MQConfig {
                 .bind(otpRpc)
                 .to(otpRpcExchange)
                 .with(OTP_RPC_ROUTINGKEY);
+    }
+    @Bean
+    public Queue emailQueue(){
+        return new Queue(INACTIVE_EMAIL_QUEUE);
+    }
+    @Bean
+    public TopicExchange emailExchange(){
+        return new TopicExchange(INACTIVE_EMAIL_EXCHANGE);
+    }
+    @Bean
+    public Binding emailBinding(Queue emailQueue, TopicExchange emailExchange){
+        return BindingBuilder
+                .bind(emailQueue)
+                .to(emailExchange)
+                .with(INACTIVE_EMAIL_ROUTINGKEY);
     }
     @Bean
     public MessageConverter messageConverter(){

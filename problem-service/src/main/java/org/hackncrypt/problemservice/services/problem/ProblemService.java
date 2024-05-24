@@ -6,6 +6,7 @@ import org.hackncrypt.problemservice.model.dto.request.ChangeProblemAcceptanceRa
 import org.hackncrypt.problemservice.model.dto.request.PatchProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.AddProblemRequest;
 import org.hackncrypt.problemservice.model.dto.request.ProblemVerificationRequest;
+import org.hackncrypt.problemservice.model.dto.response.GetProblemCountResponse;
 import org.hackncrypt.problemservice.model.dto.response.ProblemVerificationResponse;
 import org.springframework.data.domain.Page;
 
@@ -29,4 +30,6 @@ public interface ProblemService {
     void changeProblemAcceptanceRate(ChangeProblemAcceptanceRateRequest changeProblemAcceptanceRateRequest);
 
     List<ProblemDto> getAllProblemsInProblemIdList(List<String> problemIdList);
+
+    GetProblemCountResponse getProblemCount();
 }

@@ -15,6 +15,7 @@
         <module name="api-gateway" />
         <module name="name-server" />
         <module name="test-service" />
+        <module name="chat-service" />
         <module name="user-service" />
         <module name="clan-service" />
         <module name="notification-service" />
@@ -30,6 +31,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway" options="-parameters" />
       <module name="auth-config" options="-parameters" />
+      <module name="chat-service" options="-parameters" />
       <module name="clan-service" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="discussion-service" options="-parameters" />

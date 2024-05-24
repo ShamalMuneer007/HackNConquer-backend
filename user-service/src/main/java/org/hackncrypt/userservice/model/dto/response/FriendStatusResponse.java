@@ -1,4 +1,4 @@
-package org.hackncrypt.userservice.controllers.user;
+package org.hackncrypt.userservice.model.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

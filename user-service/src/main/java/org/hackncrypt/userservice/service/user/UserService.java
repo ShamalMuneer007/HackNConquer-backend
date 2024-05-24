@@ -1,8 +1,7 @@
 package org.hackncrypt.userservice.service.user;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.hackncrypt.userservice.controllers.user.AddFriendRequest;
-import org.hackncrypt.userservice.controllers.user.FriendStatusResponse;
+import org.hackncrypt.userservice.model.dto.response.*;
 import org.hackncrypt.userservice.model.dto.LeaderboardDto;
 import org.hackncrypt.userservice.model.dto.UserDto;
 import org.hackncrypt.userservice.model.dto.auth.UserAuthInfo;
@@ -12,15 +11,14 @@ import org.hackncrypt.userservice.model.dto.request.ChangeProfileImageRequest;
 import org.hackncrypt.userservice.model.dto.request.ChangeUsernameRequest;
 import org.hackncrypt.userservice.model.dto.request.IncreaseXpRequest;
 import org.hackncrypt.userservice.model.dto.request.UserDeviceTokenRequest;
-import org.hackncrypt.userservice.model.dto.response.FriendRequestsResponseDto;
-import org.hackncrypt.userservice.model.dto.response.UserDeviceTokenResponse;
+import org.hackncrypt.userservice.model.entities.User;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 public interface UserService {
-    String registerUser(RegisterRequest userRegisterDto);
+    String registerUser(RegisterRequest userRegisterDto, HttpServletRequest request);
 
     void sendRegistrationEmailOtp(RegisterRequest email);
 
@@ -28,13 +26,13 @@ public interface UserService {
 
     boolean existsByEmail(String email);
 
-     void registerOauthUser(String email, String name, String picture);
+    User registerOauthUser(String email, String name, String picture);
 
     UserAuthInfo getUserAuthInfoFromEmail(String email);
 
-    String getUsernameFromUserEmail(String email);
+    User getUsernameFromUserEmail(String email);
 
-    String authenticateUser(LoginRequest userLoginRequestDto);
+    String authenticateUser(LoginRequest userLoginRequestDto, HttpServletRequest request);
 
     Page<UserDto> getAllUsers(int page, int size);
 
@@ -45,6 +43,8 @@ public interface UserService {
     UserDto getUserData(HttpServletRequest request);
 
     List<LeaderboardDto> fetchGlobalLeaderboardUserInfos();
+
+    List<LeaderboardDto> fetchFriendLeaderboardUserInfos(Long userId);
 
     void changeUsername(ChangeUsernameRequest changeUsernameRequest, long userId);
 
@@ -73,4 +73,14 @@ public interface UserService {
     List<UserDto> getAllFriends(long userId);
 
     FriendStatusResponse checkFriendStatus(long currentUserId, long userId);
+
+    AddUserClanResponse addClan(Long userId, Long clanId);
+
+    AddUserClanResponse removeClan(Long userId, Long clanId);
+
+    List<UserDto> getUsersSortedForClanLeaderboard(List<Long> userIds);
+
+    void removeClanFromUsers(Long clanId);
+
+    UserCountResponse getUsersCount();
 }

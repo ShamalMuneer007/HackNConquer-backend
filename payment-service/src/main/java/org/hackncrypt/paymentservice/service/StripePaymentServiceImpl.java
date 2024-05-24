@@ -10,9 +10,12 @@ import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.paymentservice.config.rabbitMQ.MQConfig;
+import org.hackncrypt.paymentservice.model.dto.GetTotalRevenueResponse;
 import org.hackncrypt.paymentservice.model.dto.request.ChangeUserPremiumStatusRequest;
 import org.hackncrypt.paymentservice.model.dto.request.CreateSubscriptionRequest;
 import org.hackncrypt.paymentservice.model.dto.response.CreateSubscriptionResponse;
+import org.hackncrypt.paymentservice.model.dto.response.GetRevenueResponse;
+import org.hackncrypt.paymentservice.model.dto.response.UserSubscriptionDto;
 import org.hackncrypt.paymentservice.model.entity.UserSubscription;
 import org.hackncrypt.paymentservice.repository.UserSubscriptionRepository;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -20,9 +23,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -65,6 +71,7 @@ public CreateSubscriptionResponse createSubscription(CreateSubscriptionRequest c
 }
 
 
+@Transactional
     protected void cancelUserSubscription(Subscription subscription) throws StripeException {
         UserSubscription userSubscription = userSubscriptionRepository.findBySubscriptionId(subscription.getId()).orElseThrow();
         userSubscription.setSubscriptionCancelled(true);
@@ -75,7 +82,7 @@ public CreateSubscriptionResponse createSubscription(CreateSubscriptionRequest c
         rabbitTemplate.convertSendAndReceive(MQConfig.USER_EXCHANGE,
                 MQConfig.USER_ROUTING_KEY, new ChangeUserPremiumStatusRequest(userSubscription.getUserId(),false));
     }
-
+    @Transactional
     protected void createUserSubscription(Subscription subscription) throws  StripeException{
         Customer customer = Customer.retrieve(subscription.getCustomer());
         Map<String, String> metadata = customer.getMetadata();
@@ -84,13 +91,15 @@ public CreateSubscriptionResponse createSubscription(CreateSubscriptionRequest c
         UserSubscription userSubscription = UserSubscription.builder()
                 .subscriptionId(subscription.getId())
                 .customerId(subscription.getCustomer())
+                .currency("INR")
+                .amount(15F)
                 .userId(userId)
                 .build();
-        log.info("User subscription saving.....");
-        userSubscriptionRepository.save(userSubscription);
         log.info("Sending user subscription message through amqp");
         rabbitTemplate.convertSendAndReceive(MQConfig.USER_EXCHANGE,
                 MQConfig.USER_ROUTING_KEY, new ChangeUserPremiumStatusRequest(userId,true));
+        log.info("User subscription saving.....");
+        userSubscriptionRepository.save(userSubscription);
 
     }
 
@@ -102,14 +111,16 @@ public CreateSubscriptionResponse createSubscription(CreateSubscriptionRequest c
                 log.info("Removing subscription...");
                 Subscription subscription =  (Subscription) event.getDataObjectDeserializer().getObject().orElseThrow();
                 cancelUserSubscription(subscription);
+                break;
             }
             case "customer.subscription.created" : {
                 Subscription subscription =  (Subscription) event.getDataObjectDeserializer().getObject().orElseThrow();
                 createUserSubscription(subscription);
+                break;
             }
             case "customer.subscription.update" : {
                 Subscription subscription =  (Subscription) event.getDataObjectDeserializer().getObject().orElseThrow();
-
+                break;
             }
             default:
             {
@@ -118,4 +129,39 @@ public CreateSubscriptionResponse createSubscription(CreateSubscriptionRequest c
         }
     }
 
+    @Override
+    public List<UserSubscriptionDto> getUserSubscriptions(Long userId) {
+        return userSubscriptionRepository.findByUserId(userId).stream().map(UserSubscriptionDto::new).toList();
+    }
+
+    @Override
+    public List<GetRevenueResponse> getAllSubscriptions(String interval) {
+        return userSubscriptionRepository.findAll().stream()
+                .map(subscription -> {
+                    LocalDate subscribedDate = subscription.getSubscribedAt().toLocalDate();
+                    return GetRevenueResponse.builder()
+                            .amount(subscription.getAmount())
+                            .currency(subscription.getCurrency())
+                            .subscribedAt(getFormattedDate(subscribedDate, interval))
+                            .userId(subscription.getUserId())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public GetTotalRevenueResponse getTotalRevenue() {
+    List<UserSubscription> allSubscriptions = userSubscriptionRepository.findAll();
+    return null;
+    }
+
+    private String getFormattedDate(LocalDate subscribedDate, String interval) {
+        DateTimeFormatter formatter = switch (interval) {
+            case "yearly" -> DateTimeFormatter.ofPattern("yyyy");
+            case "monthly" -> DateTimeFormatter.ofPattern("yyyy-MM");
+            case "weekly" -> DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            default -> DateTimeFormatter.ISO_OFFSET_DATE;
+        };
+        return subscribedDate.format(formatter);
+    }
 }

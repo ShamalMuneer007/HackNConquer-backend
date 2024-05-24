@@ -41,4 +41,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     void updateAllUsersRank();
 
         List<User> findByUsernameStartingWithAndIsBlockedFalse(String username);
+
+    List<User> findAllByClan(Long clanId);
 }
