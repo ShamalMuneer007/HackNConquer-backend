@@ -9,6 +9,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
 @Service
@@ -19,16 +21,22 @@ public class FCMInitializer {
     private String firebaseConfigPath;
 
     @PostConstruct
-    public void initialize() {
+    public void initialize() throws IOException {
         try {
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(new ClassPathResource(firebaseConfigPath).getInputStream())).build();
+            GoogleCredentials credentials;
+            if (new File(firebaseConfigPath).exists()) {
+                credentials = GoogleCredentials.fromStream(new FileInputStream(firebaseConfigPath));
+            } else {
+                credentials = GoogleCredentials.fromStream(new ClassPathResource(firebaseConfigPath).getInputStream());
+            }
+            FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(credentials).build();
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
                 log.info("Firebase application initialized");
             }
         } catch (IOException e) {
-            log.error(e.getMessage());
+            log.error("Failed to initialize Firebase: {}", e.getMessage());
+            throw e;
         }
     }
 }

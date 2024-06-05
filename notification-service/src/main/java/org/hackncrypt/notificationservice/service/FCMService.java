@@ -17,24 +17,13 @@ import java.io.InputStream;
 @Service
 @Slf4j
 public class FCMService {
-
-    @PostConstruct
-    public void init() throws IOException {
-        if (FirebaseApp.getApps().isEmpty()) {
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.getApplicationDefault())
-                    .build();
-            FirebaseApp.initializeApp(options);
-        }
-    }
-
     public void sendPushNotification(String token, String title, String body) throws FirebaseMessagingException {
         log.info("Setting up notification");
         Notification notification = Notification.builder()
                 .setTitle(title)
                 .setBody(body)
                 .build();
-        log.info("Setting up message to token : {}",token);
+        log.info("Setting up message to token : {}", token);
         Message message = Message.builder()
                 .setToken(token)
                 .setNotification(notification)

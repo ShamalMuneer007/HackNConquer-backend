@@ -1,5 +1,6 @@
 package org.hackncrypt.userservice.controllers.auth;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.model.dto.LogoutResponse;
@@ -33,7 +34,7 @@ public class AuthController {
     private final UserAuditService userAuditService;
 
     @PostMapping("/google/oauth/login")
-    public ResponseEntity<LoginResponse> oauthLogin(@RequestBody String oauthToken, HttpServletRequest request){
+    public ResponseEntity<LoginResponse> oauthLogin(@RequestBody String oauthToken, HttpServletRequest request,HttpServletResponse response){
         String[] chunks = oauthToken.split("\\.");
         String payload = new String(Base64.getDecoder().decode(chunks[1]));
         JSONObject payloadJson = new JSONObject(payload);
@@ -47,6 +48,8 @@ public class AuthController {
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
         String token = jwtService.generateToken(authToken);
+        userService.setResponseCookieFromToken(token,response);
+
         log.info("T");
         userAuditService.logUserLogin(user,request);
         return ResponseEntity.ok(
@@ -58,8 +61,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest userLoginRequestDto,HttpServletRequest request){
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest userLoginRequestDto, HttpServletRequest request, HttpServletResponse response){
             String token = userService.authenticateUser(userLoginRequestDto,request);
+            userService.setResponseCookieFromToken(token, response);
             return ResponseEntity.ok(
                     LoginResponse.builder()
                             .message("Authentication Successful!")
@@ -67,7 +71,7 @@ public class AuthController {
                             .build());
     }
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest userRegisterDto,HttpServletRequest request){
+    public ResponseEntity<RegisterResponse> registerUser(@RequestBody RegisterRequest userRegisterDto,HttpServletRequest request,HttpServletResponse response){
             if(Objects.isNull(userRegisterDto.getOtp())){
                 userService.sendRegistrationEmailOtp(userRegisterDto);
                 log.info("Otp send to email successfully!");
@@ -88,6 +92,7 @@ public class AuthController {
                         .message("Invalid Otp!").build());
             }
             String token = userService.registerUser(userRegisterDto,request);
+        userService.setResponseCookieFromToken(token, response);
         return ResponseEntity.ok(RegisterResponse
                 .builder()
                 .message("Registration Successful")

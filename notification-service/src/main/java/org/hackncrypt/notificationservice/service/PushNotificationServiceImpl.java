@@ -50,7 +50,7 @@ public class PushNotificationServiceImpl implements PushNotificationService{
         }
         catch (Exception e){
             log.error("Exception occured : {}",e.getMessage());
-            channel.basicNack(tag, false, true);
+            channel.basicAck(tag, false);
         }
     }
 }

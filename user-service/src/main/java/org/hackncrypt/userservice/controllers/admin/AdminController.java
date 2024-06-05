@@ -28,7 +28,6 @@ public class AdminController {
     public ResponseEntity<GetAllUserInfoResponse> getAllUserInfo(@RequestParam(defaultValue = "1") String page,
                                                                  @RequestParam(defaultValue = "10") String size){
         Page<UserDto> users = userService.getAllUsers(Integer.parseInt(page), Integer.parseInt(size));
-
         return ResponseEntity.ok(new GetAllUserInfoResponse(users, HttpStatus.OK.value()));
     }
     @GetMapping("/audit-logs")

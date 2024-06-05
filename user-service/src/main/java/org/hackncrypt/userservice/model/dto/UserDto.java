@@ -22,6 +22,7 @@ public class UserDto {
     private String role;
     private int currentMaxXp;
     private Long clanId;
+    private boolean blocked;
     public UserDto(User user){
         this.userId = user.getUserId();
         this.email = user.getEmail();
@@ -34,5 +35,6 @@ public class UserDto {
         this.role = user.getRole().name();
         this.currentMaxXp = user.getCurrentMaxXp();
         this.clanId = user.getClan();
+        this.blocked = user.isBlocked();
     }
 }

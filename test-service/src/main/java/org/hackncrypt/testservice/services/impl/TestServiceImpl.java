@@ -141,7 +141,7 @@ public class TestServiceImpl implements TestService {
     // Utilizing the submission token, an API call is executed to retrieve the details of the code execution performed in the submission.
     private JudgeSubmissionResponse executeAndGetResponse(SubmitSolutionRequest submitSolutionRequest, TestCase test) {
         Judge0Request request = new Judge0Request();
-        String srcCode = submitSolutionRequest.getDriverCode() + submitSolutionRequest.getSolutionCode();
+        String srcCode = submitSolutionRequest.getSolutionCode() + submitSolutionRequest.getDriverCode();
         String encodedSrcCode = Base64.getEncoder().encodeToString(srcCode.getBytes());
         request.setSource_code(encodedSrcCode);
         request.setLanguage_id(submitSolutionRequest.getLanguageId());

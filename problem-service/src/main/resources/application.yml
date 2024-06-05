@@ -6,12 +6,16 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+management:
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411
 spring:
   application:
     name: problem
   data:
     mongodb:
-      uri: mongodb://admin:password@localhost:27017/
+      uri: mongodb+srv://root:password7@hacknconquer-cluster.6hthxlx.mongodb.net/
       database: hacknconquer_problem
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://34.93.145.38:8888

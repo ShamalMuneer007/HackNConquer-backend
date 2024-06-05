@@ -19,4 +19,6 @@ public interface PaymentService {
     List<GetRevenueResponse> getAllSubscriptions(String interval);
 
     GetTotalRevenueResponse getTotalRevenue();
+
+    Long getAllActiveSubscriptions();
 }

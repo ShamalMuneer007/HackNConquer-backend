@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 
 @Component
@@ -28,21 +30,26 @@ public class UserIdHandshakeInterceptor extends HttpSessionHandshakeInterceptor 
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         log.info("Before handshake processing Request {}....",request.getHeaders());
         String userToken = extractUserToken(request.getHeaders());
-        String userId = jwtUtil.getUserIdFromToken(userToken);
-        log.info("Request header userId {} ",userId);
-        if (userId != null) {
-            attributes.put("userId", userId);
+        log.info("USER TOKEN = {}",userToken);
+        if(userToken != null){
+            String userId = jwtUtil.getUserIdFromToken(userToken);
+            log.info("Request header userId {} ",userId);
+            if (userId != null) {
+                attributes.put("userId", userId);
+            }
         }
 
         return super.beforeHandshake(request, response, wsHandler, attributes);
     }
     private String extractUserToken(HttpHeaders headers) {
         String cookie = headers.getFirst(HttpHeaders.COOKIE);
+        log.info("REQUEST COOKIE  : {}",cookie);
         if (cookie != null) {
             String[] cookies = cookie.split("; ");
             for (String c : cookies) {
                 if (c.startsWith("userToken=")) {
-                    return c.substring("userToken=".length());
+                    byte[] bytearray = Base64.getDecoder().decode(c.substring("userToken=".length()));
+                    return new String(bytearray);
                 }
             }
         }

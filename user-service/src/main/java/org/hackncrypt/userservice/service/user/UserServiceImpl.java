@@ -1,7 +1,9 @@
 package org.hackncrypt.userservice.service.user;
 
 import com.rabbitmq.client.Channel;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hackncrypt.userservice.exceptions.business.UserClanException;
@@ -463,7 +465,20 @@ public class UserServiceImpl implements UserService {
         user.setDeviceToken(deviceToken);
         userRepository.save(user);
     }
-
+    @Override
+    public boolean setResponseCookieFromToken(String jwtToken, HttpServletResponse response) {
+        String encodedToken = Base64.getEncoder().encodeToString(jwtToken.getBytes());
+        Cookie cookie =  new Cookie("userToken", encodedToken);
+        cookie.setMaxAge(60 * 60 * 24 * 2);  // 2 days
+        cookie.setPath("/");
+        cookie.setHttpOnly(false);
+        cookie.setSecure(false);
+        String cookieHeader = String.format("userToken=%s; Max-Age=%d; Path=/; HttpOnly; Secure; SameSite=None",
+                encodedToken,cookie.getMaxAge());
+        log.info("Cookie header : {}",cookieHeader);
+        response.addHeader("Set-Cookie", cookieHeader);
+        return true;
+    }
 
 
     private void updateUserRank(User user) {

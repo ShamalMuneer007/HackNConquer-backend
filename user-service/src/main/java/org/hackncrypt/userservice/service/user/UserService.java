@@ -1,6 +1,8 @@
 package org.hackncrypt.userservice.service.user;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.hackncrypt.userservice.model.dto.response.*;
 import org.hackncrypt.userservice.model.dto.LeaderboardDto;
 import org.hackncrypt.userservice.model.dto.UserDto;
@@ -82,5 +84,6 @@ public interface UserService {
 
     void removeClanFromUsers(Long clanId);
 
+    boolean setResponseCookieFromToken(String token, HttpServletResponse response);
     UserCountResponse getUsersCount();
 }

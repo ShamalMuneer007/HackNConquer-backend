@@ -27,9 +27,13 @@ public class AdminController {
         log.info("REQUEST PARAM GET REVENUE : {}",interval);
         return ResponseEntity.ok(paymentService.getAllSubscriptions(interval));
     }
-//    @GetMapping("/total-revenue")
-//    public ResponseEntity<GetTotalRevenueResponse> getTotalRevenue(HttpServletRequest request){
-//        return ResponseEntity.ok(paymentService.getTotalRevenue());
-//    }
+    @GetMapping("/total-revenue")
+    public ResponseEntity<GetTotalRevenueResponse> getTotalRevenue(HttpServletRequest request){
+        return ResponseEntity.ok(paymentService.getTotalRevenue());
+    }
+    @GetMapping("/subscriptions/active")
+    public ResponseEntity<Long> getActiveSubscriptions(){
+        return ResponseEntity.ok(paymentService.getAllActiveSubscriptions());
+    }
 
 }

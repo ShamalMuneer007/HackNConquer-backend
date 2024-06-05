@@ -6,6 +6,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+management:
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411
 spring:
   application:
     name: discussion
@@ -19,9 +23,9 @@ spring:
       ddl-auto : update
     show-sql: true
   datasource:
-    url: jdbc:mysql://localhost:3306/hacknconquer_discussion?autoCreate=true
+    url: jdbc:mysql://localhost:3306/hacknconquer_discussion
     username: root
-    password: PasswordChanged@7
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://34.93.145.38:8888

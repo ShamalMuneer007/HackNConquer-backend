@@ -152,7 +152,13 @@ public CreateSubscriptionResponse createSubscription(CreateSubscriptionRequest c
     @Override
     public GetTotalRevenueResponse getTotalRevenue() {
     List<UserSubscription> allSubscriptions = userSubscriptionRepository.findAll();
-    return null;
+    Double totalAmount = Double.valueOf(allSubscriptions.stream().map(UserSubscription::getAmount).reduce(0F, Float::sum));
+    return new GetTotalRevenueResponse(totalAmount);
+    }
+
+    @Override
+    public Long getAllActiveSubscriptions() {
+        return userSubscriptionRepository.countBySubscriptionCancelledFalse();
     }
 
     private String getFormattedDate(LocalDate subscribedDate, String interval) {

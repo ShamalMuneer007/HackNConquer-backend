@@ -14,4 +14,6 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
     Optional<UserSubscription> findBySubscriptionId(String id);
 
     List<UserSubscription> findByUserId(Long userId);
+
+    Long countBySubscriptionCancelledFalse();
 }
