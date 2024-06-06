@@ -16,7 +16,7 @@ This repository hosts the microservices that power the backend of HackNConquer. 
 
 This repository contains a microservices-based application built using Spring Boot and Spring Cloud. Below is a brief description of each service.
 
-## Service
+## Services
 
 - **Api Gateway Service:** Acts as the entry point for all client requests, routing them to the appropriate microservices.
 - **User Service:** Manages user information and authentication.
