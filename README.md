@@ -4,8 +4,6 @@
 HackNConquer is a dynamic competitive programming platform where users can solve coding problems, connect and compete with fellow coders worldwide.
 This repository hosts the microservices that power the backend of HackNConquer. The services are containerized using Docker and orchestrated using Kubernetes.
 
-This repository contains a microservices-based application built using Spring Boot and Spring Cloud. Below is a brief description of each service.
-
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![Spring Cloud](https://img.shields.io/badge/Spring_Cloud-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
@@ -14,10 +12,9 @@ This repository contains a microservices-based application built using Spring Bo
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
-![SockJS](https://img.shields.io/badge/SockJS-010101?style=for-the-badge&logo=sockjs&logoColor=white)
-![STOMP](https://img.shields.io/badge/STOMP-010101?style=for-the-badge&logo=stomp&logoColor=white)
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
 
+This repository contains a microservices-based application built using Spring Boot and Spring Cloud. Below is a brief description of each service.
 
 ## Service
 
