@@ -1,4 +1,4 @@
-name: Build & Publish auth service Docker Image
+name: Build & Publish clan service Docker Image
 
 on:
   push:
