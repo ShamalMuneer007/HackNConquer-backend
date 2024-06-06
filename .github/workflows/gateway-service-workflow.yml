@@ -27,3 +27,31 @@ jobs:
           context: ./api-gateway/
           push: true
           tags: shamalmuneer/hacknconquer-gateway:latest
+
+  deploy_to_gke:
+    name: Deploy to Google Kubernetes Engine
+    needs: push_to_registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+
+      - name: Google Auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Install gke-gcloud-auth-plugin
+        run: |-
+          gcloud components install gke-gcloud-auth-plugin
+      - name: Configure kubectl
+        run: |-
+          gcloud container clusters get-credentials hacknconquer --region asia-south1 --project ${{ secrets.GCP_PROJECT_ID }}
+      - name: Deploy to GKE
+        run: |-
+          kubectl set image deployment/api-gateway api-gateway=shamalmuneer/hacknconquer-gateway:latest
+          kubectl rollout status deployment/api-gateway
