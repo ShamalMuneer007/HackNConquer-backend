@@ -52,5 +52,5 @@ jobs:
           gcloud container clusters get-credentials hacknconquer --region asia-south1 --project ${{ secrets.GCP_PROJECT_ID }}
       - name: Deploy to GKE
         run: |-
-          kubectl set image deployment/hacknconquer-user user-service=shamalmuneer/hacknconquer-user:latest
-          kubectl rollout status deployment/hacknconquer-user
+          kubectl set image deployment/user user=shamalmuneer/hacknconquer-user:latest
+          kubectl rollout status deployment/user
