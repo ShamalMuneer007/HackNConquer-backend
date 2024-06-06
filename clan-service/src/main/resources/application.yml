@@ -32,10 +32,3 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   config:
     import: optional:configserver:http://34.93.145.38:8888
-aws:
-  access:
-    key: AKIA5JPIHCOQZWFLMC5K
-  s3:
-    bucket: hacknconquer
-  secret:
-    key: MXlbs+3+EQFIrsi/vleMZ1svyTdxw80PKfB3hYN2
