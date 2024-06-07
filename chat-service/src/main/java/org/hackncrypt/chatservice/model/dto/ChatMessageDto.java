@@ -30,5 +30,6 @@ public class ChatMessageDto {
         this.content = chat.getContent();
         this.timestamp = chat.getTimestamp();
         this.replyFor = chat.getReplyFor();
+        this.read = chat.isRead();
     }
 }
