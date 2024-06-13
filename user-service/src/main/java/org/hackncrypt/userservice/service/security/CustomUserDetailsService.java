@@ -8,6 +8,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
     @Autowired

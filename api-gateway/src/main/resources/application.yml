@@ -20,6 +20,7 @@ spring:
           "[/**]":
             allowedOrigins:
               - "https://hacknconquer.vercel.app/"
+              - "http://localhost:5173"
             allowedMethods:
               - GET
               - POST

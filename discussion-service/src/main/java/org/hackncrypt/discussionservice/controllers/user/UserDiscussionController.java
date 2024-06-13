@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/user")
+@RequestMapping( "/api/v1/user")
 public class UserDiscussionController {
     private final DiscussionService discussionService;
     private final CommentService commentService;
-    @PostMapping("/submit-discussion")
+    @PostMapping( "/submit-discussion")
     public ResponseEntity<ApiSuccessResponse> submitProblemDiscussion(@RequestBody @Valid SubmitDiscussionRequest submitDiscussionRequest, HttpServletRequest request){
         Long userId = Long.parseLong((String)request.getAttribute("userId"));
         discussionService.submitUserProblemDiscussion(submitDiscussionRequest,userId);
